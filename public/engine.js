@@ -1055,7 +1055,7 @@
         const startX = window.raceConfig.startX + 290;
         const endX = window.raceConfig.trackLength - 240;
         const widthY = window.raceConfig.trackWidth;
-        const topPad = 56;
+        const topPad = 32;
         const usableH = widthY - topPad * 2;
 
         const diff = currentDifficulty?.key || 'normal';
@@ -1064,8 +1064,7 @@
         const maxSlots = currentDifficulty?.maxSlots || 4;
 
         // Stratified Multi-Slot Wave Spawning scaled by Map Difficulty (Easy / Normal / Hard / Chaos):
-        // Divides the channel height into equal vertical bands per wave and shuffles boost/hazard categories
-        // across the bands so every lane experiences equal density & fairness while matching the map's difficulty!
+        // Spans the full river height (top to bottom margins) so edge lanes get equal obstacle coverage!
         for (let x = startX; x < endX; x += stepX) {
             const slotsInWave = minSlots + (Math.random() < 0.5 ? (maxSlots - minSlots) : 0);
             const bandH = usableH / slotsInWave;
@@ -1084,7 +1083,8 @@
 
             for (let s = 0; s < slotsInWave; s++) {
                 const bandTop = topPad + s * bandH;
-                const yPos = bandTop + (0.18 + Math.random() * 0.64) * bandH;
+                // Ensures obstacles spawn directly across the top bank, middle, and bottom bank lanes
+                const yPos = bandTop + (0.08 + Math.random() * 0.84) * bandH;
                 const jitterRange = Math.min(85, stepX * 0.48);
                 const xPos = x + (Math.random() * jitterRange - jitterRange / 2);
                 window.trackObstacles.push(createRandomObstacle(xPos, yPos, waveCategories[s]));
@@ -1386,8 +1386,8 @@
         }
 
         // Update Drifting Track Obstacles so no single Y lane is permanently safe or permanently boosted
-        const obsMinY = 50;
-        const obsMaxY = window.raceConfig.trackWidth - 50;
+        const obsMinY = 28;
+        const obsMaxY = window.raceConfig.trackWidth - 28;
         window.trackObstacles.forEach(obs => {
             if (obs.driftAmp && obs.baseY !== undefined) {
                 obs.phase += (obs.driftSpeed || 1.0) * dt;
