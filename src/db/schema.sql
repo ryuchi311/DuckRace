@@ -16,4 +16,5 @@ CREATE TABLE IF NOT EXISTS participants (
 );
 
 CREATE INDEX IF NOT EXISTS idx_participants_room ON participants(room_pin);
+CREATE INDEX IF NOT EXISTS idx_participants_joined ON participants(joined_at);
 

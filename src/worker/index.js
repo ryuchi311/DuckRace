@@ -20,6 +20,16 @@ export default {
       return new Response(null, { headers: corsHeaders, status: 204 });
     }
 
+    // 24-hour auto cleanup: purge records older than 24 hours (86,400,000 ms)
+    const cleanupOldData = async () => {
+      if (!env.DB) return;
+      try {
+        const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+        await env.DB.prepare(`DELETE FROM participants WHERE joined_at < ?`).bind(cutoff).run();
+        await env.DB.prepare(`DELETE FROM rooms WHERE updated_at < ?`).bind(cutoff).run();
+      } catch (e) {}
+    };
+
     // Auto-create D1 schema if D1 database binding is present
     const initD1 = async () => {
       if (!env.DB) return;
@@ -36,8 +46,10 @@ export default {
             last_boost_at INTEGER,
             PRIMARY KEY (room_pin, participant_id)
           )`),
-          env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_participants_room ON participants(room_pin)`)
+          env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_participants_room ON participants(room_pin)`),
+          env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_participants_joined ON participants(joined_at)`)
         ]);
+        await cleanupOldData();
       } catch (e) {}
     };
 
@@ -64,9 +76,9 @@ export default {
           participants = results || [];
         } catch (e) {}
       }
-      // 1B. Fallback to Cloudflare KV
+      // 1B. Fallback to Cloudflare KV (auto-expiring 24 hours TTL)
       else if (env && env.DUCK_ROOMS_KV) {
-        dbType = 'Cloudflare KV';
+        dbType = 'Cloudflare KV (24h TTL)';
         try {
           const raw = await env.DUCK_ROOMS_KV.get(`room:${pin}`);
           if (raw) participants = JSON.parse(raw);
@@ -149,7 +161,7 @@ export default {
             else if (participants.length < 100) participants.push(record);
 
             await env.DUCK_ROOMS_KV.put(`room:${pin}`, JSON.stringify(participants), {
-              expirationTtl: 4 * 3600
+              expirationTtl: 24 * 3600 // Auto-deleted from KV after 24 hours
             });
           }
         }
