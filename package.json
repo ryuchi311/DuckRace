@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "deploy": "wrangler deploy"
+    "build": "node -e \"const fs=require('fs'); fs.mkdirSync('dist',{recursive:true}); ['index.html','ultimate_character_duck_race.html','engine.js','quack.mp3'].forEach(f=>fs.copyFileSync(f,'dist/'+f));\"",
+    "deploy": "npm run build && npx --yes wrangler deploy",
+    "deploy:pages": "npm run build && npx --yes wrangler pages deploy dist --project-name=duck-race"
   },
   "keywords": [
     "game",
