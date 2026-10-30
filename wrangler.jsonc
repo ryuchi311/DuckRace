@@ -11,7 +11,7 @@
     {
       "binding": "DB",
       "database_name": "duck-race-db",
-      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+      "database_id": "cfa88ac9-cdd5-4f7d-9800-9b70601ecce6"
     }
   ]
 }
