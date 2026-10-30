@@ -1,17 +1,17 @@
 {
-	"$schema": "https://unpkg.com/wrangler@latest/config-schema.json",
-	"name": "duck-race",
-	"main": "worker.js",
-	"compatibility_date": "2025-04-01",
-	"assets": {
-		"directory": "./dist",
-		"binding": "ASSETS"
-	},
-	"kv_namespaces": [
-		{
-			"binding": "ROOMS",
-			"id": "3c724ecb8a5e4aa9ab1ec4871553dffb",
-			"remote": true
-		}
-	]
+  "$schema": "https://unpkg.com/wrangler@latest/config-schema.json",
+  "name": "duck-race",
+  "main": "worker.js",
+  "compatibility_date": "2025-04-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "duck-race-db",
+      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+    }
+  ]
 }
