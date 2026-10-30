@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "build": "node -e \"const fs=require('fs'); fs.mkdirSync('public',{recursive:true}); ['index.html','ultimate_character_duck_race.html','engine.js','quack.mp3'].forEach(f=>fs.copyFileSync(f,'public/'+f));\"",
     "dev:server": "node src/server/index.js",
     "dev:worker": "npx wrangler dev",
     "deploy": "npx wrangler deploy",
