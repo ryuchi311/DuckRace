@@ -1,0 +1,12 @@
+name = "duck-race"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# Serve frontend HTML/JS/Audio from public directory at Cloudflare edge
+assets = { directory = "./public", binding = "ASSETS" }
+
+# Database: Cloudflare KV for storing game rooms and participants
+# Run `npx wrangler kv namespace create DUCK_ROOMS_KV` to get an id, or bind via dashboard
+[[kv_namespaces]]
+binding = "DUCK_ROOMS_KV"
+id = "duck_rooms_kv_id"

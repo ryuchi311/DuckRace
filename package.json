@@ -1,0 +1,17 @@
+{
+  "name": "duck-race-webapp",
+  "version": "1.0.0",
+  "description": "Ultimate Character Duck Race Web App for Cloudflare",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "deploy": "wrangler deploy"
+  },
+  "keywords": [
+    "game",
+    "duck-race",
+    "cloudflare-workers"
+  ],
+  "author": "",
+  "license": "MIT"
+}
