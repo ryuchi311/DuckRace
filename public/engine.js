@@ -257,14 +257,8 @@
     // -------------------------------------------------------------
     const TRACK_THEMES = {
         rapids: {
-            name: '🏞️ River Rapids (EASY)',
-            shortName: '🟢 EASY • Rapids',
-            difficulty: 'easy',
-            waveStepX: 250,
-            minSlots: 2,
-            maxSlots: 3,
-            driftScale: 0.75,
-            hazardPenaltyScale: 0.85,
+            name: '🏞️ River Rapids',
+            shortName: '🏞️ Rapids',
             waterLeft: '#0369a1',
             waterCenter: '#0284c7',
             waterRight: '#0369a1',
@@ -277,14 +271,8 @@
             gridLines: false
         },
         river: {
-            name: '🏞️ River Rapids (EASY)',
-            shortName: '🟢 EASY • Rapids',
-            difficulty: 'easy',
-            waveStepX: 250,
-            minSlots: 2,
-            maxSlots: 3,
-            driftScale: 0.75,
-            hazardPenaltyScale: 0.85,
+            name: '🏞️ River Rapids',
+            shortName: '🏞️ Rapids',
             waterLeft: '#0369a1',
             waterCenter: '#0284c7',
             waterRight: '#0369a1',
@@ -297,14 +285,8 @@
             gridLines: false
         },
         ocean: {
-            name: '🏝️ Pixel Ocean Breeze (NORMAL)',
-            shortName: '🔵 NORMAL • Ocean',
-            difficulty: 'normal',
-            waveStepX: 180,
-            minSlots: 3,
-            maxSlots: 4,
-            driftScale: 1.0,
-            hazardPenaltyScale: 1.0,
+            name: '🏝️ Tropical Beach Ocean',
+            shortName: '🏝️ Ocean',
             waterLeft: '#0d9488',
             waterCenter: '#14b8a6',
             waterRight: '#0d9488',
@@ -317,14 +299,8 @@
             gridLines: false
         },
         cyber: {
-            name: '⚡ Neon Cyber Stream (HARD)',
-            shortName: '🟠 HARD • Cyber',
-            difficulty: 'hard',
-            waveStepX: 135,
-            minSlots: 3,
-            maxSlots: 4,
-            driftScale: 1.45,
-            hazardPenaltyScale: 1.15,
+            name: '⚡ Neon Cyber Stream',
+            shortName: '⚡ Cyber',
             waterLeft: '#1e1b4b',
             waterCenter: '#312e81',
             waterRight: '#1e1b4b',
@@ -337,14 +313,8 @@
             gridLines: true
         },
         lava: {
-            name: '🌋 Lava Castle Moat (CHAOS)',
-            shortName: '🔴 CHAOS • Lava',
-            difficulty: 'chaos',
-            waveStepX: 95,
-            minSlots: 4,
-            maxSlots: 5,
-            driftScale: 2.0,
-            hazardPenaltyScale: 1.3,
+            name: '🌋 Lava Castle Moat',
+            shortName: '🌋 Lava',
             waterLeft: '#7f1d1d',
             waterCenter: '#dc2626',
             waterRight: '#7f1d1d',
@@ -357,14 +327,55 @@
             gridLines: false
         }
     };
-    // Support direct difficulty keys as aliases
-    TRACK_THEMES.easy = TRACK_THEMES.rapids;
-    TRACK_THEMES.normal = TRACK_THEMES.ocean;
-    TRACK_THEMES.hard = TRACK_THEMES.cyber;
-    TRACK_THEMES.chaos = TRACK_THEMES.lava;
+
+    // Obstacle difficulty settings configuration
+    const OBSTACLE_DIFFICULTIES = {
+        easy: {
+            key: 'easy',
+            name: '🟢 Easy Obstacles',
+            label: '🟢 Easy',
+            waveStepX: 250,
+            minSlots: 2,
+            maxSlots: 3,
+            driftScale: 0.75,
+            hazardPenaltyScale: 0.85
+        },
+        normal: {
+            key: 'normal',
+            name: '🔵 Normal Obstacles',
+            label: '🔵 Normal',
+            waveStepX: 180,
+            minSlots: 3,
+            maxSlots: 4,
+            driftScale: 1.0,
+            hazardPenaltyScale: 1.0
+        },
+        hard: {
+            key: 'hard',
+            name: '🟠 Hard Obstacles',
+            label: '🟠 Hard',
+            waveStepX: 135,
+            minSlots: 3,
+            maxSlots: 4,
+            driftScale: 1.45,
+            hazardPenaltyScale: 1.15
+        },
+        chaos: {
+            key: 'chaos',
+            name: '🔴 Chaos Obstacles',
+            label: '🔴 Chaos',
+            waveStepX: 95,
+            minSlots: 4,
+            maxSlots: 5,
+            driftScale: 2.0,
+            hazardPenaltyScale: 1.3
+        }
+    };
 
     let currentThemeKey = 'rapids';
     let currentTheme = TRACK_THEMES.rapids;
+    let currentDifficultyKey = 'normal';
+    let currentDifficulty = OBSTACLE_DIFFICULTIES.normal;
 
     // -------------------------------------------------------------
     // 3. RACE CONFIGURATION & HORIZONTAL WORLD COORDINATES
@@ -658,14 +669,39 @@
             document.querySelectorAll('.theme-select-sync').forEach(sel => {
                 if (sel.value !== themeKey) sel.value = themeKey;
             });
-            // Immediately regenerate obstacles when idle so the new Easy/Normal/Hard/Chaos layout is visible right away
+            setCommentary(`🗺️ Map changed to ${currentTheme.name}!`);
+        }
+    };
+
+    window.changeObstacleDifficulty = function (diffKey) {
+        const key = String(diffKey || 'normal').toLowerCase();
+        if (OBSTACLE_DIFFICULTIES[key]) {
+            currentDifficultyKey = key;
+            currentDifficulty = OBSTACLE_DIFFICULTIES[key];
+            // Sync any difficulty dropdowns/buttons on the page
+            document.querySelectorAll('.difficulty-select-sync').forEach(sel => {
+                if (sel.value !== key) sel.value = key;
+            });
+            ['easy', 'normal', 'hard', 'chaos'].forEach(k => {
+                const btn = document.getElementById('diffBtn_' + k);
+                if (btn) {
+                    if (k === key) {
+                        btn.className = 'diff-btn bg-amber-500/20 border-2 border-amber-400 text-amber-300 rounded-xl py-1.5 text-xs font-black transition shadow-sm';
+                    } else {
+                        btn.className = 'diff-btn bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl py-1.5 text-xs font-bold transition';
+                    }
+                }
+            });
+            const hudDiff = document.getElementById('hudDifficultyBadge');
+            if (hudDiff) hudDiff.textContent = currentDifficulty.label;
+            // Regenerate track obstacles when idle so the new layout is immediately visible
             if (window.raceState === 'idle') {
                 spawnTrackEnvironment();
             }
-            const diffBadge = (currentTheme.difficulty || 'normal').toUpperCase();
-            setCommentary(`🗺️ Map & Difficulty set to ${currentTheme.name} [${diffBadge} MODE] — Track obstacles updated!`);
+            setCommentary(`⚡ Track obstacle difficulty set to ${currentDifficulty.name}! Spawning new hazards & boosts.`);
         }
     };
+    window.setObstacleDifficulty = window.changeObstacleDifficulty;
 
     window.applyBulkNames = function (replaceAndMatch) {
         const textarea = document.getElementById('bulkNamesInput');
@@ -939,8 +975,8 @@
     };
 
     function createRandomObstacle(xPos, yPos, forceCategory) {
-        const diff = currentTheme?.difficulty || 'normal';
-        const driftScale = currentTheme?.driftScale || 1.0;
+        const diff = currentDifficulty?.key || 'normal';
+        const driftScale = currentDifficulty?.driftScale || 1.0;
         const rand = Math.random();
         let type = 'boost';
 
@@ -1022,10 +1058,10 @@
         const topPad = 56;
         const usableH = widthY - topPad * 2;
 
-        const diff = currentTheme?.difficulty || 'normal';
-        const stepX = currentTheme?.waveStepX || 180;
-        const minSlots = currentTheme?.minSlots || 3;
-        const maxSlots = currentTheme?.maxSlots || 4;
+        const diff = currentDifficulty?.key || 'normal';
+        const stepX = currentDifficulty?.waveStepX || 180;
+        const minSlots = currentDifficulty?.minSlots || 3;
+        const maxSlots = currentDifficulty?.maxSlots || 4;
 
         // Stratified Multi-Slot Wave Spawning scaled by Map Difficulty (Easy / Normal / Hard / Chaos):
         // Divides the channel height into equal vertical bands per wave and shuffles boost/hazard categories
@@ -1543,7 +1579,7 @@
             // Super Rocket Launch Pad!
             racer.statusEffect = 'rocket';
             racer.stateTimer = 1.15;
-            racer.currentSpeedMultiplier = currentTheme?.difficulty === 'chaos' ? 1.72 : 1.62;
+            racer.currentSpeedMultiplier = currentDifficulty?.key === 'chaos' ? 1.72 : 1.62;
             racer.speechText = 'BLAST OFF! 🚀';
             racer.speechTimer = 1.8;
             if (typeof window.playBoostChime === 'function') window.playBoostChime(true);
@@ -2303,7 +2339,7 @@
         const pad = (n) => String(n).padStart(2, '0');
         const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
         const mapName = currentTheme?.name || 'River Rapids';
-        const diffMode = (currentTheme?.difficulty || 'normal').toUpperCase();
+        const diffMode = (currentDifficulty?.key || 'normal').toUpperCase();
 
         if (format === 'csv') {
             const escapeCsv = (val) => `"${String(val ?? '').replace(/"/g, '""')}"`;

@@ -1,7 +1,20 @@
+# Node.js
 node_modules/
-dist/
-.wrangler/
-.DS_Store
-Thumbs.db
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 *.log
 
+# Cloudflare Wrangler
+.wrangler/
+
+# Build artifacts & temp
+dist/
+*.tmp
+
+# Local database store (generated at runtime)
+database.json
+
+# Operating System files
+.DS_Store
+Thumbs.db

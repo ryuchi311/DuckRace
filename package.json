@@ -1,18 +1,23 @@
 {
   "name": "duck-race-webapp",
   "version": "1.0.0",
-  "description": "Ultimate Character Duck Race Web App for Cloudflare",
+  "description": "Ultimate Character Duck Race Web App for Cloudflare & Node.js",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "build": "node -e \"const fs=require('fs'); fs.mkdirSync('dist',{recursive:true}); ['index.html','ultimate_character_duck_race.html','engine.js','quack.mp3'].forEach(f=>fs.copyFileSync(f,'dist/'+f));\"",
-    "deploy": "npm run build && npx --yes wrangler deploy",
-    "deploy:pages": "npm run build && npx --yes wrangler pages deploy dist --project-name=duck-race"
+    "dev:server": "node src/server/index.js",
+    "dev:worker": "npx wrangler dev",
+    "deploy": "npx wrangler deploy",
+    "deploy:pages": "npx wrangler pages deploy public --project-name=duck-race",
+    "db:init": "npx wrangler d1 execute duck-race-db --local --file=src/db/schema.sql",
+    "db:init:remote": "npx wrangler d1 execute duck-race-db --remote --file=src/db/schema.sql"
   },
   "keywords": [
     "game",
     "duck-race",
-    "cloudflare-workers"
+    "cloudflare",
+    "workers",
+    "d1-database"
   ],
   "author": "",
   "license": "MIT"
