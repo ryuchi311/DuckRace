@@ -19,3 +19,4 @@ Then open `http://localhost:3000` in your browser.
 2. In your GitHub repo, go to **Settings → Pages**.
 3. Under **Build and deployment → Source**, select **GitHub Actions** (or **Deploy from a branch → `main` / `/ (root)`**).
 4. Your live Duck Race URL will be published at `https://<your-username>.github.io/<repo-name>/` — and the **QR Code Stage Join** will automatically use that live URL for phones!
+
