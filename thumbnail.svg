@@ -1,0 +1,139 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1120"/>
+      <stop offset="40%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e1b4b"/>
+    </linearGradient>
+
+    <!-- Water River Stream -->
+    <linearGradient id="waterGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0369a1"/>
+      <stop offset="50%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+
+    <!-- Gold Championship Glow -->
+    <radialGradient id="goldGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Duck Shading -->
+    <radialGradient id="duckGrad" cx="40%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="40%" stop-color="#fde047"/>
+      <stop offset="85%" stop-color="#eab308"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="1200" height="630" fill="url(#bgGrad)"/>
+
+  <!-- River Stream -->
+  <rect y="340" width="1200" height="290" fill="url(#waterGrad)"/>
+  <path d="M0 340 C300 320, 600 360, 900 330 C1050 315, 1150 340, 1200 335 L1200 630 L0 630 Z" fill="#0284c7" opacity="0.6"/>
+  
+  <!-- Wave Lines -->
+  <path d="M-50 420 Q150 390 350 420 T750 420 T1150 420" fill="none" stroke="#7dd3fc" stroke-width="4" opacity="0.55" stroke-linecap="round"/>
+  <path d="M50 490 Q250 460 450 490 T850 490 T1250 490" fill="none" stroke="#bae6fd" stroke-width="5" opacity="0.45" stroke-linecap="round"/>
+  <path d="M-20 560 Q180 530 380 560 T780 560 T1180 560" fill="none" stroke="#38bdf8" stroke-width="4" opacity="0.6" stroke-linecap="round"/>
+
+  <!-- Checkered Finish Line at Right -->
+  <g transform="translate(1120, 310)">
+    <rect x="0" y="0" width="28" height="320" fill="#ffffff" opacity="0.9"/>
+    <rect x="0" y="0" width="14" height="20" fill="#0f172a"/>
+    <rect x="14" y="20" width="14" height="20" fill="#0f172a"/>
+    <rect x="0" y="40" width="14" height="20" fill="#0f172a"/>
+    <rect x="14" y="60" width="14" height="20" fill="#0f172a"/>
+    <rect x="0" y="80" width="14" height="20" fill="#0f172a"/>
+    <rect x="14" y="100" width="14" height="20" fill="#0f172a"/>
+    <rect x="0" y="120" width="14" height="20" fill="#0f172a"/>
+    <rect x="14" y="140" width="14" height="20" fill="#0f172a"/>
+    <rect x="0" y="160" width="14" height="20" fill="#0f172a"/>
+    <rect x="14" y="180" width="14" height="20" fill="#0f172a"/>
+    <rect x="0" y="200" width="14" height="20" fill="#0f172a"/>
+    <rect x="14" y="220" width="14" height="20" fill="#0f172a"/>
+    <rect x="0" y="240" width="14" height="20" fill="#0f172a"/>
+    <rect x="14" y="260" width="14" height="20" fill="#0f172a"/>
+    <rect x="0" y="280" width="14" height="20" fill="#0f172a"/>
+    <rect x="14" y="300" width="14" height="20" fill="#0f172a"/>
+  </g>
+
+  <!-- Giant Glow Behind Main Duck -->
+  <circle cx="840" cy="350" r="260" fill="url(#goldGlow)"/>
+
+  <!-- Left: Big Typography and Badge Pill -->
+  <g transform="translate(80, 110)">
+    <!-- Championship Badge -->
+    <rect x="0" y="0" width="340" height="44" rx="22" fill="#1e293b" stroke="#fbbf24" stroke-width="2"/>
+    <text x="24" y="28" font-family="'Fredoka', 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="900" fill="#facc15" letter-spacing="1.5">CHAMPIONSHIP EDITION</text>
+    
+    <!-- Main Title -->
+    <text x="0" y="120" font-family="'Fredoka', 'Segoe UI', Arial, sans-serif" font-size="74" font-weight="900" fill="#ffffff" letter-spacing="-1">ULTIMATE</text>
+    <text x="0" y="195" font-family="'Fredoka', 'Segoe UI', Arial, sans-serif" font-size="74" font-weight="900" fill="#facc15" letter-spacing="-1">DUCK RACE</text>
+
+    <!-- Subtitle / Hook -->
+    <text x="0" y="245" font-family="'Inter', 'Segoe UI', Arial, sans-serif" font-size="24" font-weight="700" fill="#38bdf8">100 Racers - Broadcast Studio - 3D Podium</text>
+    
+    <text x="0" y="285" font-family="'Inter', 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="500" fill="#94a3b8">Live IRL QR Joining - TV Multi-Angle Director - 60FPS+</text>
+
+    <!-- Feature Pills -->
+    <g transform="translate(0, 325)">
+      <rect x="0" y="0" width="140" height="36" rx="10" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+      <text x="70" y="23" text-anchor="middle" font-family="'Inter', sans-serif" font-size="13" font-weight="700" fill="#38bdf8">Quack Surge</text>
+
+      <rect x="155" y="0" width="130" height="36" rx="10" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+      <text x="220" y="23" text-anchor="middle" font-family="'Inter', sans-serif" font-size="13" font-weight="700" fill="#f43f5e">4 Obstacles</text>
+
+      <rect x="300" y="0" width="140" height="36" rx="10" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+      <text x="370" y="23" text-anchor="middle" font-family="'Inter', sans-serif" font-size="13" font-weight="700" fill="#a855f7">3D Dancing</text>
+    </g>
+  </g>
+
+  <!-- Right: Hero 3D Gold Champion Duck with Crown -->
+  <g transform="translate(800, 240) scale(1.65)">
+    <!-- Water Ripple -->
+    <ellipse cx="32" cy="78" rx="60" ry="14" fill="rgba(56, 189, 248, 0.4)" stroke="rgba(125, 211, 252, 0.8)" stroke-width="3"/>
+    <ellipse cx="32" cy="78" rx="40" ry="8" fill="rgba(186, 230, 253, 0.6)"/>
+
+    <!-- Duck Body -->
+    <path d="M-10 52 Q-22 36 -6 40 Q4 44 18 40 Q62 38 66 60 Q68 76 34 76 Q-8 76 -10 52 Z" fill="url(#duckGrad)" stroke="#0f172a" stroke-width="3.5" stroke-linejoin="round"/>
+    
+    <!-- Tail Feather -->
+    <path d="M-12 50 Q-26 38 -18 32 Q-6 36 -6 46 Z" fill="#eab308" stroke="#0f172a" stroke-width="3"/>
+
+    <!-- Wing -->
+    <path d="M6 50 Q28 42 38 58 Q24 70 4 62 Z" fill="#ca8a04" stroke="#0f172a" stroke-width="3.2" stroke-linejoin="round"/>
+
+    <!-- Duck Head -->
+    <circle cx="36" cy="22" r="23" fill="url(#duckGrad)" stroke="#0f172a" stroke-width="3.5"/>
+
+    <!-- Rosy Cheek Blush -->
+    <ellipse cx="38" cy="30" rx="6" ry="3.5" fill="#fb7185" opacity="0.75"/>
+
+    <!-- Big Happy Eye -->
+    <circle cx="42" cy="18" r="7.5" fill="#ffffff" stroke="#0f172a" stroke-width="2.5"/>
+    <circle cx="45" cy="19" r="3.8" fill="#0f172a"/>
+    <circle cx="47" cy="17" r="1.6" fill="#ffffff"/>
+
+    <!-- Beak -->
+    <path d="M54 18 Q82 18 78 28 Q74 36 54 32 Z" fill="#f97316" stroke="#0f172a" stroke-width="3.2" stroke-linejoin="round"/>
+    <path d="M54 26 Q64 28 72 26" fill="none" stroke="#c2410c" stroke-width="2"/>
+
+    <!-- Golden Royal Crown on Head -->
+    <polygon points="18,6 18,-14 26,-4 36,-18 46,-4 54,-14 54,6" fill="#facc15" stroke="#78350f" stroke-width="2.6" stroke-linejoin="round"/>
+    <circle cx="36" cy="-5" r="3" fill="#ef4444"/>
+    <circle cx="24" cy="-1" r="2.2" fill="#3b82f6"/>
+    <circle cx="48" cy="-1" r="2.2" fill="#10b981"/>
+  </g>
+
+  <!-- Sparkles around Crown -->
+  <g fill="#fef08a">
+    <polygon points="840,190 843,200 853,203 843,206 840,216 837,206 827,203 837,200" />
+    <polygon points="960,160 962,168 970,170 962,172 960,180 958,172 950,170 958,168" />
+    <polygon points="760,250 762,256 768,258 762,260 760,266 758,260 752,258 758,256" />
+  </g>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="48" fill="#0f172a" stroke="#fbbf24" stroke-width="4"/>
+  <!-- Mini Duck -->
+  <ellipse cx="46" cy="72" rx="24" ry="6" fill="#0284c7" opacity="0.5"/>
+  <path d="M26 62 Q18 50 26 52 Q32 54 40 52 Q64 50 66 64 Q68 74 46 74 Q26 74 26 62 Z" fill="#fde047" stroke="#0f172a" stroke-width="3"/>
+  <circle cx="52" cy="42" r="13" fill="#fde047" stroke="#0f172a" stroke-width="3"/>
+  <circle cx="56" cy="40" r="3" fill="#0f172a"/>
+  <path d="M62 40 Q76 40 74 46 Q70 50 62 48 Z" fill="#f97316" stroke="#0f172a" stroke-width="2.5"/>
+  <!-- Crown -->
+  <polygon points="42,32 42,20 47,25 52,18 57,25 62,20 62,32" fill="#facc15" stroke="#78350f" stroke-width="2"/>
+</svg>
