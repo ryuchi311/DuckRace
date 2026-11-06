@@ -2319,6 +2319,23 @@
     // -------------------------------------------------------------
     // 12. WINNER PODIUM, FULL STANDINGS & CONFETTI CELEBRATION
     // -------------------------------------------------------------
+
+    // -------------------------------------------------------------
+    // DONATION / TIP JAR MODAL CONTROLS
+    // -------------------------------------------------------------
+    window.openTipModal = function () {
+        const m = document.getElementById('tipModal');
+        if (m) {
+            m.classList.remove('hidden');
+            if (typeof window.playBoostChime === 'function') window.playBoostChime();
+        }
+    };
+
+    window.closeTipModal = function () {
+        const m = document.getElementById('tipModal');
+        if (m) m.classList.add('hidden');
+    };
+
     window.closeWinnerModal = function () {
         const m = document.getElementById('winnerModal');
         if (m) m.classList.add('hidden');
