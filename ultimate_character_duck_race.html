@@ -290,6 +290,15 @@
                         <button onclick="selectRandomParty(25)" class="bg-slate-800 hover:bg-slate-700 text-amber-300 px-2 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition text-center">🎲 25</button>
                         <button onclick="resetDefaultNames()" class="bg-slate-800 hover:bg-slate-700 text-rose-300 px-2 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition sm:ml-auto text-center">↺ Reset</button>
                     </div>
+                    <!-- Game Dev Suite: Export & Import Full Roster -->
+                    <div class="grid grid-cols-2 gap-1.5">
+                        <button type="button" onclick="exportRosterConfig()" class="btn-game bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-amber-400/50 text-amber-300 py-1.5 px-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition" title="Export full duck roster and settings to JSON">
+                            <span>📦</span> <span>Export Roster</span>
+                        </button>
+                        <button type="button" onclick="triggerRosterImportDialog()" class="btn-game bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-cyan-400/50 text-cyan-300 py-1.5 px-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition" title="Import customized duck fleet from JSON">
+                            <span>📂</span> <span>Import JSON</span>
+                        </button>
+                    </div>
                     <!-- Optional IRL Mode Quick Launch -->
                     <button onclick="startHostIrlWaitingMode()" class="btn-game w-full bg-fuchsia-600/20 hover:bg-fuchsia-600/30 border border-fuchsia-500/50 text-fuchsia-200 py-2 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition text-center">
                         <span>📡</span> <span>Host Realtime IRL Race (Wait for QR)</span>
@@ -338,6 +347,10 @@ Emily
                         <button type="button" onclick="loadSampleBulkList(100)" class="text-cyan-300 hover:underline font-semibold text-xs">100 Names</button>
                         <span>•</span>
                         <button type="button" onclick="clearBulkInput()" class="text-rose-400 hover:underline text-xs">Clear</button>
+                        <span>•</span>
+                        <button type="button" onclick="exportRosterConfig()" class="text-cyan-300 hover:underline font-semibold text-xs" title="Export roster to JSON">💾 Save File</button>
+                        <span>•</span>
+                        <button type="button" onclick="triggerRosterImportDialog()" class="text-cyan-300 hover:underline font-semibold text-xs" title="Load roster from JSON">📂 Load File</button>
                     </div>
 
                     <div class="grid grid-cols-2 sm:flex items-center gap-2">
@@ -649,13 +662,19 @@ Emily
                             🎙️ Welcome to the Broadcast Studio! Tap any duck or Camera POV above to switch angles live!
                         </p>
                     </div>
-                    <!-- Legend Pill -->
-                    <div class="hidden xl:flex items-center gap-3 bg-slate-950/90 backdrop-blur-md border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-slate-300 shrink-0">
-                        <span class="flex items-center gap-1"><span class="text-amber-400">🪶</span> Boost</span>
-                        <span class="flex items-center gap-1"><span class="text-orange-400">🍞</span> Bread</span>
-                        <span class="flex items-center gap-1"><span class="text-cyan-400">🌀</span> Whirlpool</span>
-                        <span class="text-slate-500">|</span>
-                        <span class="text-amber-300 font-semibold">Keys 1-0: Cameras</span>
+                    <!-- Legend Pill & High FPS Checkbox -->
+                    <div class="hidden sm:flex items-center gap-2 sm:gap-2.5 bg-slate-950/90 backdrop-blur-md border border-slate-700/80 rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs text-slate-300 shrink-0 pointer-events-auto">
+                        <span class="hidden xl:flex items-center gap-1"><span class="text-amber-400">🪶</span> Boost</span>
+                        <span class="hidden xl:flex items-center gap-1"><span class="text-orange-400">🍞</span> Bread</span>
+                        <span class="hidden xl:flex items-center gap-1"><span class="text-cyan-400">🌀</span> Whirlpool</span>
+                        <span class="hidden xl:inline text-slate-500">|</span>
+                        <span class="hidden lg:inline text-amber-300 font-semibold">Keys 1-0: Cameras</span>
+                        <span class="hidden lg:inline text-slate-500">|</span>
+                        <label class="flex items-center gap-1.5 cursor-pointer select-none text-[11px] font-bold text-slate-200 hover:text-white bg-slate-900/90 hover:bg-slate-800/90 px-2 py-0.5 rounded-lg border border-slate-700 transition" title="Toggle 60FPS lock or Uncapped 60FPS+ for high-refresh 120Hz/144Hz+ displays">
+                            <input type="checkbox" id="highFpsCheckbox" checked onchange="toggleHighFpsMode(this.checked)" class="w-3.5 h-3.5 accent-amber-400 rounded cursor-pointer" />
+                            <span class="text-amber-300">60FPS+</span>
+                            <span id="liveFpsCounter" class="font-mono text-[10px] text-emerald-400 font-black bg-slate-950 px-1.5 py-0.2 rounded border border-emerald-500/30">60</span>
+                        </label>
                     </div>
                 </div>
 
@@ -970,6 +989,9 @@ Emily
                             <span id="totalFinishersBadge" class="text-[11px] sm:text-xs bg-slate-800 text-amber-300 px-2 py-0.5 rounded-lg font-bold">All Finishers</span>
                         </div>
                         <div class="flex flex-wrap items-center gap-1.5">
+                            <button onclick="exportRaceResults('json')" class="btn-game bg-amber-500/20 hover:bg-amber-500/35 border border-amber-500/50 text-amber-300 px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-extrabold flex items-center gap-1 transition" title="Download Machine-Readable JSON Game Data">
+                                <span>💾</span> <span>Export JSON</span>
+                            </button>
                             <button onclick="exportRaceResults('csv')" class="btn-game bg-emerald-600/25 hover:bg-emerald-600/40 border border-emerald-500/50 text-emerald-300 px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-extrabold flex items-center gap-1 transition" title="Download Excel/CSV Spreadsheet">
                                 <span>📥</span> <span>Export CSV</span>
                             </button>
@@ -3621,5 +3643,6 @@ Emily
             requestAnimationFrame(mainAnimationLoop);
         };
     </script>
+    <input type="file" id="rosterImportFileInput" accept=".json,application/json" class="hidden" onchange="importRosterConfigFromFile(this)" />
 </body>
 </html>

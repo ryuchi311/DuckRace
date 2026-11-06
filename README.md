@@ -24,6 +24,7 @@ DuckRace/
 ├── .github/
 │   └── workflows/           # Automated deployment workflows (GitHub Pages)
 │
+├── run.bat                  # One-click Windows local launcher
 ├── wrangler.toml            # Cloudflare Worker & D1 Database configuration
 ├── package.json             # Scripts & metadata
 ├── server.js                # Root entry point alias for Node.js hosting (Railway/Render)
@@ -32,9 +33,25 @@ DuckRace/
 
 ---
 
-## 🚀 Quick Deployment Options
+## 🚀 Running & Deployment
 
-### 1. Cloudflare Workers + D1 Database (Fastest Serverless Hosting)
+### 1. Run Locally (Windows - One Click)
+Double-click [`run.bat`](file:///c:/DuckRace/run.bat) in the project root or run from CMD:
+```cmd
+run.bat
+```
+* Checks that Node.js is installed.
+* Starts the local server on `http://localhost:3000`.
+* Automatically opens your default web browser to the game.
+
+### 2. Standalone Node.js (Railway / Render / Local Machine)
+```bash
+npm start
+```
+* Automatically persists active rooms to `database.json`.
+* Automatically detects Wi-Fi LAN IP for local audience QR code scanning.
+
+### 3. Cloudflare Workers + D1 Database (Fastest Serverless Hosting)
 1. **Initialize or bind database:**
    ```bash
    npx wrangler d1 create duck-race-db
@@ -43,14 +60,6 @@ DuckRace/
    ```bash
    npm run deploy
    ```
-
-### 2. Standalone Node.js (Railway / Render / Local Machine)
-1. **Run locally or in container:**
-   ```bash
-   npm start
-   ```
-   * Automatically persists active rooms to `database.json`.
-   * Automatically detects Wi-Fi LAN IP for local audience QR code scanning.
 
 ---
 

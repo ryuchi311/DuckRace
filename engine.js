@@ -396,6 +396,20 @@
     window.wakeParticles = [];
     window.sceneryProps = [];
     window.lastFrameTime = performance.now();
+    window.highFpsMode = localStorage.getItem('duck_race_high_fps') !== 'false'; // default true: 60FPS+ uncapped
+    let fpsHistory = [];
+    let lastFpsUiUpdate = 0;
+    let accumulatedRenderTime = 0;
+
+    window.toggleHighFpsMode = function(enabled) {
+        window.highFpsMode = Boolean(enabled);
+        try {
+            localStorage.setItem('duck_race_high_fps', window.highFpsMode ? 'true' : 'false');
+        } catch(e) {}
+        const cb = document.getElementById('highFpsCheckbox');
+        if (cb && cb.checked !== window.highFpsMode) cb.checked = window.highFpsMode;
+        console.log('[DuckRace Engine] 60FPS+ Mode set to:', window.highFpsMode ? 'High-Refresh Uncapped (60FPS+)' : 'Standard 60FPS Clamped');
+    };
 
     // Camera & Pan/Zoom State
     window.activeCameraMode = 'leader';
@@ -1334,8 +1348,39 @@
     // 9. PHYSICS UPDATE & PHOTO-FINISH ENGINE
     // -------------------------------------------------------------
     window.mainAnimationLoop = function (timestamp) {
-        const rawDt = Math.min((timestamp - window.lastFrameTime) / 1000, 0.08);
+        const elapsed = (timestamp - window.lastFrameTime) / 1000;
+        
+        // When 60FPS+ mode is false, lock/clamp render rate to ~60 FPS (16.6ms) for battery saving
+        if (!window.highFpsMode && elapsed < 0.0155) {
+            requestAnimationFrame(window.mainAnimationLoop);
+            return;
+        }
+
+        const rawDt = Math.min(elapsed, 0.08);
         window.lastFrameTime = timestamp;
+
+        // FPS calculation (rolling window)
+        if (elapsed > 0) {
+            const instantFps = 1 / elapsed;
+            fpsHistory.push(instantFps);
+            if (fpsHistory.length > 18) fpsHistory.shift();
+
+            if (timestamp - lastFpsUiUpdate > 350) {
+                lastFpsUiUpdate = timestamp;
+                const avgFps = Math.round(fpsHistory.reduce((a, b) => a + b, 0) / fpsHistory.length);
+                const fpsBadge = document.getElementById('liveFpsCounter');
+                if (fpsBadge) {
+                    fpsBadge.textContent = avgFps > 0 ? avgFps : '60';
+                    if (avgFps >= 55) {
+                        fpsBadge.className = 'font-mono text-[10px] text-emerald-400 font-black bg-slate-950 px-1.5 py-0.2 rounded border border-emerald-500/30';
+                    } else if (avgFps >= 30) {
+                        fpsBadge.className = 'font-mono text-[10px] text-amber-400 font-black bg-slate-950 px-1.5 py-0.2 rounded border border-amber-500/30';
+                    } else {
+                        fpsBadge.className = 'font-mono text-[10px] text-rose-400 font-black bg-slate-950 px-1.5 py-0.2 rounded border border-rose-500/30';
+                    }
+                }
+            }
+        }
 
         if (window.raceState === 'racing') {
             updateRacePhysics(rawDt);
@@ -2278,6 +2323,7 @@
         const m = document.getElementById('winnerModal');
         if (m) m.classList.add('hidden');
         stopConfetti();
+        if (typeof stopPodium3DAnimation === 'function') stopPodium3DAnimation();
         if (typeof window.startMusic === 'function') window.startMusic('lobby');
     };
 
@@ -2341,9 +2387,42 @@
         const mapName = currentTheme?.name || 'River Rapids';
         const diffMode = (currentDifficulty?.key || 'normal').toUpperCase();
 
-        if (format === 'csv') {
+        if (format === 'json') {
+            const exportPayload = {
+                game: 'Ultimate Duck Race',
+                edition: 'Championship Broadcast Edition',
+                exportedAt: now.toISOString(),
+                raceDurationSeconds: window.raceConfig?.durationSeconds || 20,
+                mapTheme: currentThemeKey,
+                mapName: mapName,
+                difficulty: diffMode,
+                totalRacers: list.length,
+                winner: list[0] ? {
+                    name: list[0].customName,
+                    archetype: list[0].title,
+                    finishTime: list[0].finishTime || null,
+                    battleCry: list[0].battleCry || null
+                } : null,
+                standings: list.map((r, idx) => ({
+                    rank: idx + 1,
+                    medal: idx === 0 ? 'Gold' : idx === 1 ? 'Silver' : idx === 2 ? 'Bronze' : null,
+                    id: r.id,
+                    name: r.customName,
+                    archetypeId: r.archetypeId,
+                    title: r.title,
+                    finishTimeSeconds: r.finishTime ? Number(r.finishTime.toFixed(3)) : null,
+                    progressPercent: r.finished ? 100 : Math.min(100, Math.max(0, Math.round((r.progress || 0) * 100))),
+                    finished: !!r.finished,
+                    battleCry: r.battleCry || ''
+                }))
+            };
+            const jsonStr = JSON.stringify(exportPayload, null, 2);
+            triggerFileDownload(`duck-race-results_${stamp}.json`, jsonStr, 'application/json;charset=utf-8;');
+            if (typeof window.playBoostChime === 'function') window.playBoostChime();
+            setCommentary(`💾 Exported complete race data to JSON (duck-race-results_${stamp}.json)!`);
+        } else if (format === 'csv') {
             const escapeCsv = (val) => `"${String(val ?? '').replace(/"/g, '""')}"`;
-            const headers = ['Rank', 'Medal', 'Participant Name', 'Character Title', 'Finish Time (s)', 'Progress (%)', 'Map', 'Difficulty'];
+            const headers = ['Rank', 'Medal', 'Participant Name', 'Character Title', 'Finish Time (s)', 'Progress (%)', 'Map', 'Difficulty', 'Battle Cry'];
             const rows = list.map((r, idx) => {
                 const rank = idx + 1;
                 const medal = idx === 0 ? '1st (Gold)' : idx === 1 ? '2nd (Silver)' : idx === 2 ? '3rd (Bronze)' : `#${rank}`;
@@ -2357,10 +2436,10 @@
                     timeStr,
                     progStr,
                     escapeCsv(mapName),
-                    escapeCsv(diffMode)
+                    escapeCsv(diffMode),
+                    escapeCsv(r.battleCry || '')
                 ].join(',');
             });
-            // Prepend UTF-8 BOM (\uFEFF) so Excel opens emojis & international names cleanly
             const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
             triggerFileDownload(`duck-race-results_${stamp}.csv`, csvContent, 'text/csv;charset=utf-8;');
             if (typeof window.playBoostChime === 'function') window.playBoostChime();
@@ -2425,6 +2504,129 @@
             }
         }
     };
+
+    // =============================================================
+    // GAME DEV SUITE: EXPORT & IMPORT FULL ROSTER & GAME CONFIG
+    // =============================================================
+    window.exportRosterConfig = function () {
+        if (!window.rosterState || !window.rosterState.length) {
+            setCommentary(`⚠️ No roster available to export!`);
+            return;
+        }
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}`;
+        
+        const payload = {
+            format: 'DuckRaceRosterExport',
+            version: '2.0',
+            exportedAt: now.toISOString(),
+            gameConfig: {
+                durationSeconds: window.raceConfig?.durationSeconds || 20,
+                mapTheme: currentThemeKey,
+                obstacleDifficulty: currentDifficulty?.key || 'normal'
+            },
+            totalDucks: window.rosterState.length,
+            activeRacers: window.rosterState.filter(d => d.enabled).length,
+            roster: window.rosterState.map(d => ({
+                id: d.id,
+                archetypeId: d.archetypeId,
+                customName: d.customName,
+                defaultName: d.defaultName,
+                title: d.title,
+                auraColor: d.auraColor,
+                bodyColor: d.bodyColor,
+                wingColor: d.wingColor,
+                battleCry: d.battleCry,
+                quackPitch: d.quackPitch,
+                enabled: !!d.enabled
+            }))
+        };
+
+        const jsonStr = JSON.stringify(payload, null, 2);
+        triggerFileDownload(`duck-race-roster_${stamp}.json`, jsonStr, 'application/json;charset=utf-8;');
+        if (typeof window.playBoostChime === 'function') window.playBoostChime();
+        setCommentary(`📦 Exported full ${payload.totalDucks}-duck roster configuration to JSON!`);
+    };
+
+    window.triggerRosterImportDialog = function () {
+        const inp = document.getElementById('rosterImportFileInput');
+        if (inp) {
+            inp.value = '';
+            inp.click();
+        }
+    };
+
+    window.importRosterConfigFromFile = function (fileInput) {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            try {
+                const parsed = JSON.parse(e.target.result);
+                let importedRoster = null;
+
+                if (Array.isArray(parsed)) {
+                    importedRoster = parsed;
+                } else if (parsed && Array.isArray(parsed.roster)) {
+                    importedRoster = parsed.roster;
+                    if (parsed.gameConfig) {
+                        if (parsed.gameConfig.durationSeconds && typeof setDurationPreset === 'function') {
+                            setDurationPreset(parsed.gameConfig.durationSeconds);
+                        }
+                        if (parsed.gameConfig.mapTheme && typeof changeTheme === 'function') {
+                            changeTheme(parsed.gameConfig.mapTheme);
+                        }
+                        if (parsed.gameConfig.obstacleDifficulty && typeof changeObstacleDifficulty === 'function') {
+                            changeObstacleDifficulty(parsed.gameConfig.obstacleDifficulty);
+                        }
+                    }
+                }
+
+                if (!importedRoster || !importedRoster.length) {
+                    throw new Error('Invalid or empty roster array in JSON file');
+                }
+
+                // Merge imported ducks into rosterState
+                window.rosterState = importedRoster.map((d, i) => {
+                    const baseArchetype = DUCK_ARCHETYPES.find(a => a.id === d.archetypeId) || DUCK_ARCHETYPES[i % DUCK_ARCHETYPES.length];
+                    const id = d.id || `duck_${i + 1}`;
+                    return {
+                        id,
+                        archetypeId: baseArchetype.id,
+                        defaultName: d.defaultName || baseArchetype.defaultName,
+                        customName: d.customName || d.defaultName || baseArchetype.defaultName,
+                        title: d.title || baseArchetype.title,
+                        auraColor: d.auraColor || baseArchetype.auraColor,
+                        bodyColor: d.bodyColor || baseArchetype.bodyColor,
+                        wingColor: d.wingColor || baseArchetype.wingColor,
+                        quackPitch: d.quackPitch || baseArchetype.quackPitch || 440,
+                        battleCry: d.battleCry || baseArchetype.battleCry || 'FULL SEND!',
+                        desc: d.desc || baseArchetype.desc || 'Championship Duck',
+                        enabled: d.enabled !== false,
+                        svgMarkup: generateDuckSVG({ ...baseArchetype, ...d, id }),
+                        spriteImg: null
+                    };
+                });
+
+                if (typeof preloadDuckSprites === 'function') preloadDuckSprites();
+                if (typeof renderRosterCards === 'function') renderRosterCards();
+                if (typeof saveRosterToLocalStorage === 'function') saveRosterToLocalStorage();
+                if (window.raceState === 'idle' && typeof setupIdleStartingLineup === 'function') {
+                    setupIdleStartingLineup();
+                }
+
+                if (typeof window.playBoostChime === 'function') window.playBoostChime(true);
+                setCommentary(`✅ Successfully imported ${window.rosterState.length} ducks from JSON file!`);
+            } catch (err) {
+                console.error('Import error:', err);
+                alert('Could not import roster: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+    };
+    
     window.openWinnerModal = function () {
         const list = getCurrentResultStandings();
         if (!list.length) return;
@@ -2453,24 +2655,29 @@
 
         // Visual Podium Order: 2nd (Silver Left), 1st (Gold Center Tall), 3rd (Bronze Right)
         const podiumSlots = [
-            { racer: second, place: '2ND PLACE', medal: '🥈', heightClass: 'sm:h-56', border: 'border-slate-400/60', bg: 'from-slate-800/90 to-slate-900', text: 'text-slate-200' },
-            { racer: first,  place: '1ST CHAMPION', medal: '👑', heightClass: 'sm:h-64 podium-glow', border: 'border-amber-400', bg: 'from-amber-500/25 via-slate-900 to-slate-900', text: 'text-amber-300' },
-            { racer: third,  place: '3RD PLACE', medal: '🥉', heightClass: 'sm:h-52', border: 'border-amber-700/70', bg: 'from-amber-950/40 to-slate-900', text: 'text-amber-500' }
+            { racer: second, placeIndex: 1, place: '2ND PLACE', medal: '🥈', heightClass: 'sm:h-60', border: 'border-slate-400/60', bg: 'from-slate-800/90 to-slate-900', text: 'text-slate-200' },
+            { racer: first,  placeIndex: 0, place: '1ST CHAMPION', medal: '👑', heightClass: 'sm:h-68 podium-glow', border: 'border-amber-400', bg: 'from-amber-500/25 via-slate-900 to-slate-900', text: 'text-amber-300' },
+            { racer: third,  placeIndex: 2, place: '3RD PLACE', medal: '🥉', heightClass: 'sm:h-56', border: 'border-amber-700/70', bg: 'from-amber-950/40 to-slate-900', text: 'text-amber-500' }
         ].filter(s => s.racer);
 
         if (podiumContainer) {
-            podiumContainer.innerHTML = podiumSlots.map(slot => {
+            podiumContainer.innerHTML = podiumSlots.map((slot, idx) => {
                 const r = slot.racer;
                 const timeBadge = r.finishTime ? `⏱️ ${r.finishTime.toFixed(2)}s` : `📍 ${Math.round((r.progress || 0) * 100)}%`;
                 return `
-                    <div class="bg-gradient-to-b ${slot.bg} border-2 ${slot.border} ${slot.heightClass} rounded-2xl p-4 flex flex-col items-center justify-between shadow-2xl">
-                        <span class="text-xs font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-950/80 ${slot.text} border border-slate-700">
-                            ${slot.medal} ${slot.place}
-                        </span>
-                        <div class="w-24 h-24 my-1 animate-bob">
-                            ${r.duckData?.svgMarkup || ''}
+                    <div class="bg-gradient-to-b ${slot.bg} border-2 ${slot.border} ${slot.heightClass} rounded-2xl p-3.5 sm:p-4 flex flex-col items-center justify-between shadow-2xl relative overflow-hidden">
+                        <div class="flex items-center gap-1.5 z-10 flex-wrap justify-center">
+                            <span class="text-xs font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-950/85 ${slot.text} border border-slate-700 shadow">
+                                ${slot.medal} ${slot.place}
+                            </span>
+                            <button onclick="cyclePodiumDance(${idx})" id="podiumDanceBadge_${idx}" class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-400/20 hover:bg-amber-400/35 text-amber-300 border border-amber-400/50 transition cursor-pointer shadow-sm" title="Click to switch dance move! Drag duck to spin in 3D!">
+                                🕺 3D DANCE
+                            </button>
                         </div>
-                        <div class="text-center w-full">
+                        <div class="relative w-[156px] h-[132px] my-0.5 flex items-center justify-center select-none">
+                            <canvas id="podium3dCanvas_${idx}" class="w-[156px] h-[132px] cursor-pointer active:cursor-grabbing" title="Click to switch dance move or drag to spin ${r.customName} in 3D!"></canvas>
+                        </div>
+                        <div class="text-center w-full z-10">
                             <div class="font-display text-base font-bold text-white truncate">${r.customName}</div>
                             <div class="text-[11px] font-semibold text-slate-400 truncate">${r.title}</div>
                             <div class="mt-1 font-mono text-xs font-extrabold text-cyan-300 bg-slate-950/80 rounded-lg py-0.5 px-2 inline-block">
@@ -2504,6 +2711,934 @@
 
         modal.classList.remove('hidden');
         startConfetti();
+        initPodium3DCanvases(podiumSlots);
+    }
+
+    // -------------------------------------------------------------
+    // 12B. 3D VOLUMETRIC CHAMPIONSHIP PODIUM DUCK RENDERER & DANCES
+    // -------------------------------------------------------------
+    let podium3dAnimId = null;
+    let podium3dSlotStates = [];
+
+    const PODIUM_DANCE_STYLES = [
+        { id: 'disco',     label: '🕺 Disco Boogie' },
+        { id: 'happyhop',  label: '🎉 Happy Flip' },
+        { id: 'shimmy',    label: '💃 Samba Shimmy' },
+        { id: 'headbanger',label: '🎸 Rock Vibe' },
+        { id: 'spin',      label: '🌪️ Breakdance' }
+    ];
+
+    window.cyclePodiumDance = function (slotIdx) {
+        const st = podium3dSlotStates[slotIdx];
+        if (!st) return;
+        st.danceStyleIndex = (st.danceStyleIndex + 1) % PODIUM_DANCE_STYLES.length;
+        st.nextDanceSwitchTime = performance.now() / 1000 + 6.5;
+        st.cheerJumpBoost = 1.0;
+        const badge = document.getElementById('podiumDanceBadge_' + slotIdx);
+        if (badge) {
+            badge.textContent = PODIUM_DANCE_STYLES[st.danceStyleIndex].label;
+        }
+        if (typeof window.playDuckQuack === 'function') {
+            window.playDuckQuack(st.racer?.quackPitch || 540);
+        }
+    };
+
+    function shadeHexColor(hex, percent) {
+        if (!hex || typeof hex !== 'string' || !hex.startsWith('#')) return hex || '#fde047';
+        let h = hex.replace('#', '');
+        if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+        const num = parseInt(h, 16);
+        if (isNaN(num)) return hex;
+        let r = (num >> 16) + Math.round(2.55 * percent);
+        let g = ((num >> 8) & 0x00FF) + Math.round(2.55 * percent);
+        let b = (num & 0x0000FF) + Math.round(2.55 * percent);
+        r = Math.max(0, Math.min(255, r));
+        g = Math.max(0, Math.min(255, g));
+        b = Math.max(0, Math.min(255, b));
+        return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+
+    function stopPodium3DAnimation() {
+        if (podium3dAnimId) {
+            cancelAnimationFrame(podium3dAnimId);
+            podium3dAnimId = null;
+        }
+        podium3dSlotStates = [];
+    }
+
+    function draw3DPedestal(ctx, cx, cy, placeIndex, t) {
+        ctx.save();
+        // Pedestal colors: 1st Gold, 2nd Silver, 3rd Bronze
+        let topColA = '#fef08a', topColB = '#ca8a04', sideColA = '#eab308', sideColB = '#854d0e', rimCol = '#fde047';
+        if (placeIndex === 1) { // 2nd Place Silver
+            topColA = '#f1f5f9'; topColB = '#64748b'; sideColA = '#94a3b8'; sideColB = '#334155'; rimCol = '#e2e8f0';
+        } else if (placeIndex === 2) { // 3rd Place Bronze
+            topColA = '#fed7aa'; topColB = '#9a3412'; sideColA = '#ea580c'; sideColB = '#431407'; rimCol = '#fb923c';
+        }
+
+        const rx = 44;
+        const ry = 12;
+        const depth = 13;
+
+        // Ground shadow under pedestal
+        ctx.fillStyle = 'rgba(2, 6, 23, 0.65)';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + depth + 4, rx * 1.08, ry * 1.15, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Cylinder 3D Side Wall
+        const sideGrad = ctx.createLinearGradient(cx - rx, cy, cx + rx, cy);
+        sideGrad.addColorStop(0, sideColB);
+        sideGrad.addColorStop(0.28, sideColA);
+        sideGrad.addColorStop(0.55, topColA);
+        sideGrad.addColorStop(0.85, sideColB);
+        sideGrad.addColorStop(1, '#0f172a');
+
+        ctx.fillStyle = sideGrad;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + depth, rx, ry, 0, 0, Math.PI, false);
+        ctx.lineTo(cx - rx, cy);
+        ctx.ellipse(cx, cy, rx, ry, 0, Math.PI, 0, true);
+        ctx.closePath();
+        ctx.fill();
+        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = 'rgba(15, 23, 42, 0.8)';
+        ctx.stroke();
+
+        // Cylinder Top Face
+        const topGrad = ctx.createRadialGradient(cx - 12, cy - 3, 4, cx, cy, rx);
+        topGrad.addColorStop(0, topColA);
+        topGrad.addColorStop(0.7, sideColA);
+        topGrad.addColorStop(1, topColB);
+
+        ctx.fillStyle = topGrad;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pulsing Disco Floor Ring on Pedestal
+        const pulseAlpha = 0.4 + 0.45 * Math.abs(Math.sin(t * 6.5 + placeIndex));
+        ctx.strokeStyle = rimCol;
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+
+        ctx.strokeStyle = `rgba(255, 255, 255, ${pulseAlpha.toFixed(2)})`;
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, rx * 0.75, ry * 0.72, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    function draw3DDuckCharacter(ctx, st, t) {
+        const { racer, w, h, placeIndex, userYawOffset } = st;
+        ctx.clearRect(0, 0, w, h);
+
+        // Auto-switch random happy dance every few seconds
+        if (t > st.nextDanceSwitchTime) {
+            st.danceStyleIndex = Math.floor(Math.random() * PODIUM_DANCE_STYLES.length);
+            st.nextDanceSwitchTime = t + 3.8 + Math.random() * 2.8;
+            const badge = document.getElementById('podiumDanceBadge_' + st.slotIdx);
+            if (badge) {
+                badge.textContent = PODIUM_DANCE_STYLES[st.danceStyleIndex].label;
+            }
+        }
+
+        // Decay manual cheer jump boost
+        if (st.cheerJumpBoost > 0) {
+            st.cheerJumpBoost = Math.max(0, st.cheerJumpBoost - 0.035);
+        }
+
+        const danceStyle = PODIUM_DANCE_STYLES[st.danceStyleIndex]?.id || 'disco';
+        const duck = racer.duckData || racer || {};
+        const cBody = duck.bodyColor || '#fde047';
+        const cWing = duck.wingColor || shadeHexColor(cBody, -18);
+        const aura = duck.auraColor || racer.auraColor || '#fde047';
+        const key = getArchetypeKey(duck);
+        const seed = String(duck.id || racer.id || 'd').split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+
+        const cx = w / 2;
+        const pedestalY = h - 22;
+
+        // 1. Volumetric Backlight Aura Glow (pulses to the dance beat!)
+        const beat = Math.abs(Math.sin(t * 7.5 + placeIndex));
+        ctx.save();
+        const auraRadius = (placeIndex === 0 ? 58 : 48) + beat * 6;
+        const auraGrad = ctx.createRadialGradient(cx, pedestalY - 36, 4, cx, pedestalY - 36, auraRadius);
+        auraGrad.addColorStop(0, aura + '99');
+        auraGrad.addColorStop(0.55, aura + '30');
+        auraGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = auraGrad;
+        ctx.beginPath();
+        ctx.arc(cx, pedestalY - 36, auraRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // 2. Draw 3D Championship Pedestal
+        draw3DPedestal(ctx, cx, pedestalY, placeIndex, t);
+
+        // 3. Calculate Happy Dance Choreography & Kinematics
+        const phase = placeIndex * 1.9 + (seed % 7) * 0.4;
+        let danceX = 0;
+        let danceY = 0;
+        let scaleX = 1.0;
+        let scaleY = 1.0;
+        let bodyRoll = 0;
+        let headBobY = 0;
+        let headTilt = 0;
+        let yawAngle = (userYawOffset || 0);
+        let wingCheerAngleL = 0;
+        let wingCheerAngleR = 0;
+        let tailWag = Math.sin(t * 14 + phase) * 3.5;
+        let beakOpen = 0;
+
+        if (danceStyle === 'disco') {
+            // Groovy side-to-side disco bounce with alternating raised wings
+            const b = Math.sin(t * 8.5 + phase);
+            const hop = Math.abs(b);
+            danceX = Math.cos(t * 4.25 + phase) * 9;
+            danceY = -hop * 12;
+            scaleY = 0.92 + hop * 0.16;
+            scaleX = 1 / Math.sqrt(scaleY);
+            bodyRoll = Math.sin(t * 4.25 + phase) * 0.16;
+            yawAngle += Math.sin(t * 4.25 + phase) * 0.55;
+            wingCheerAngleL = Math.sin(t * 8.5 + phase) * 0.85 + 0.35;
+            wingCheerAngleR = -Math.sin(t * 8.5 + phase) * 0.85 + 0.35;
+            headBobY = -Math.abs(Math.cos(t * 8.5 + phase)) * 3.5;
+            beakOpen = hop > 0.7 ? (hop - 0.7) * 3.2 : 0;
+        } else if (danceStyle === 'happyhop') {
+            // High exuberant celebration jumps + mid-air cheer!
+            const jumpCycle = (t * 2.4 + phase) % 1;
+            const jumpWave = Math.sin(jumpCycle * Math.PI);
+            danceY = -Math.pow(jumpWave, 0.75) * 21;
+            if (jumpCycle < 0.15 || jumpCycle > 0.85) {
+                // Squash on landing
+                scaleX = 1.15;
+                scaleY = 0.86;
+            } else {
+                // Stretch in mid-air
+                scaleX = 0.92;
+                scaleY = 1.12;
+            }
+            bodyRoll = Math.sin(t * 9.5 + phase) * 0.14;
+            yawAngle += Math.sin(t * 3.2 + phase) * 0.65;
+            // Throw both wings up in victory when jumping high!
+            wingCheerAngleL = 0.4 + jumpWave * 0.95;
+            wingCheerAngleR = 0.4 + jumpWave * 0.95;
+            headTilt = Math.sin(t * 7 + phase) * 0.15;
+            beakOpen = jumpWave > 0.5 ? (jumpWave - 0.5) * 2.2 : 0;
+        } else if (danceStyle === 'shimmy') {
+            // Fast Samba hip-shimmy & joyful wing flutter
+            danceX = Math.sin(t * 11 + phase) * 6.5;
+            danceY = -Math.abs(Math.sin(t * 11 + phase)) * 6;
+            scaleX = 1.0 + Math.sin(t * 22 + phase) * 0.08;
+            scaleY = 1.0 - Math.sin(t * 22 + phase) * 0.07;
+            bodyRoll = Math.sin(t * 11 + phase) * 0.18;
+            yawAngle += Math.sin(t * 5.5 + phase) * 0.72;
+            wingCheerAngleL = 0.35 + Math.sin(t * 20) * 0.55;
+            wingCheerAngleR = 0.35 + Math.cos(t * 20) * 0.55;
+            tailWag = Math.sin(t * 26 + phase) * 6.5;
+            beakOpen = 0.4 + 0.4 * Math.sin(t * 11 + phase);
+        } else if (danceStyle === 'headbanger') {
+            // Rock & Roll rhythmic headbanging & power hops
+            const rockBeat = Math.abs(Math.sin(t * 10 + phase));
+            danceY = -rockBeat * 9;
+            headBobY = Math.sin(t * 10 + phase) * 5.5;
+            headTilt = Math.sin(t * 10 + phase) * 0.28;
+            bodyRoll = Math.sin(t * 5 + phase) * 0.15;
+            yawAngle += Math.sin(t * 2.5 + phase) * 0.45;
+            scaleY = 0.94 + rockBeat * 0.12;
+            scaleX = 1 / scaleY;
+            wingCheerAngleL = 0.5 + rockBeat * 0.6;
+            wingCheerAngleR = 0.5 + rockBeat * 0.6;
+            beakOpen = rockBeat > 0.6 ? 0.85 : 0.1;
+        } else if (danceStyle === 'spin') {
+            // 360-degree Victory Twirl & Pirouette!
+            const spinProgress = t * 4.2 + phase;
+            yawAngle += spinProgress;
+            danceY = -Math.abs(Math.sin(t * 7 + phase)) * 13 - 3;
+            bodyRoll = Math.sin(t * 7 + phase) * 0.12;
+            wingCheerAngleL = 0.75 + Math.sin(t * 14) * 0.3;
+            wingCheerAngleR = 0.75 + Math.cos(t * 14) * 0.3;
+            beakOpen = 0.65;
+        }
+
+        // Apply extra click-to-cheer jump boost if user clicked the duck
+        if (st.cheerJumpBoost > 0) {
+            danceY -= Math.sin(st.cheerJumpBoost * Math.PI) * 18;
+            yawAngle += st.cheerJumpBoost * Math.PI * 2;
+            wingCheerAngleL += 0.7;
+            wingCheerAngleR += 0.7;
+            beakOpen = 1.0;
+        }
+
+        const dirX = Math.cos(yawAngle); // Horizontal 3D facing (-1 to 1)
+
+        // 4. Dynamic Contact Shadow on top of Pedestal (shrinks as duck jumps higher!)
+        ctx.save();
+        const heightFactor = Math.max(0.35, 1 + danceY * 0.028);
+        ctx.fillStyle = `rgba(15, 23, 42, ${(0.58 * heightFactor).toFixed(2)})`;
+        ctx.beginPath();
+        ctx.ellipse(cx + danceX * 0.85, pedestalY - 1, 25 * heightFactor, 6.5 * heightFactor, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // 5. Transform to Duck 3D Dancing Center (with squash & stretch anchored near feet)
+        ctx.save();
+        ctx.translate(cx + danceX, pedestalY - 6 + danceY);
+        ctx.rotate(bodyRoll);
+        ctx.scale(scaleX, scaleY);
+        ctx.translate(0, -12);
+
+        const bodyLight = shadeHexColor(cBody, 35);
+        const bodyMid = cBody;
+        const bodyDark = shadeHexColor(cBody, -28);
+        const bodyDeep = shadeHexColor(cBody, -45);
+
+        const wingLight = shadeHexColor(cWing, 28);
+        const wingDark = shadeHexColor(cWing, -30);
+
+        // Helper for 3D Shaded Ellipsoid / Sphere
+        function fill3DSphere(x, y, rx, ry, rot, colLight, colMid, colDark, outline = true) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(rot);
+            const grad = ctx.createRadialGradient(-rx * 0.32, -ry * 0.35, Math.min(rx, ry) * 0.1, 0, 0, Math.max(rx, ry) * 1.05);
+            grad.addColorStop(0, '#ffffff');
+            grad.addColorStop(0.16, colLight);
+            grad.addColorStop(0.58, colMid);
+            grad.addColorStop(0.9, colDark);
+            grad.addColorStop(1, shadeHexColor(colDark, -20));
+
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (outline) {
+                ctx.lineWidth = 1.8;
+                ctx.strokeStyle = '#0f172a';
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        const faceShiftX = dirX * 9;
+        const backShiftX = -dirX * 11;
+
+        // --- DANCING 3D WEBBED ORANGE FEET ---
+        const leftFootLift = Math.max(0, Math.sin(t * 9 + phase)) * 6;
+        const rightFootLift = Math.max(0, -Math.sin(t * 9 + phase)) * 6;
+        fill3DSphere(-6 + dirX * 2, 12 - leftFootLift, 6, 3.2, -0.2 + leftFootLift * 0.05, '#fed7aa', '#f97316', '#9a3412', true);
+        fill3DSphere(6 + dirX * 2, 12 - rightFootLift, 6, 3.2, 0.2 - rightFootLift * 0.05, '#fed7aa', '#f97316', '#9a3412', true);
+
+        // --- BACK PROPS (Capes, Backpacks, Wings behind body) ---
+        if (key === 'king' || key === 'vampire' || key === 'saiyan') {
+            ctx.save();
+            const capeCol1 = key === 'saiyan' ? '#fb923c' : '#ef4444';
+            const capeCol2 = key === 'saiyan' ? '#9a3412' : '#7f1d1d';
+            const capeGrad = ctx.createLinearGradient(backShiftX - 18, -15, backShiftX + 10, 18);
+            capeGrad.addColorStop(0, capeCol1);
+            capeGrad.addColorStop(1, capeCol2);
+            ctx.fillStyle = capeGrad;
+            ctx.strokeStyle = key === 'king' ? '#f8fafc' : '#0f172a';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            const capeWave = Math.sin(t * 10 + phase) * 5;
+            ctx.moveTo(faceShiftX * 0.2, -14);
+            ctx.quadraticCurveTo(backShiftX * 1.6 - 10, -4 + capeWave, backShiftX * 1.75 - 12, 14 + capeWave);
+            ctx.lineTo(backShiftX * 0.7, 15);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+        } else if (key === 'astronaut') {
+            fill3DSphere(backShiftX * 1.25, -4, 8, 12, 0, '#f8fafc', '#94a3b8', '#334155');
+        } else if (key === 'ninja' || key === 'samurai') {
+            ctx.save();
+            ctx.strokeStyle = key === 'samurai' ? '#facc15' : '#cbd5e1';
+            ctx.lineWidth = 3.5;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(backShiftX * 1.4 - 8, 10);
+            ctx.lineTo(backShiftX * 0.4 + 6, -24);
+            ctx.stroke();
+            ctx.restore();
+        } else if (key === 'fairy') {
+            ctx.save();
+            const wingFlap = Math.sin(t * 15) * 0.35;
+            ctx.translate(backShiftX * 0.8, -10);
+            ctx.rotate(-0.35 + wingFlap);
+            const fGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, 16);
+            fGrad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+            fGrad.addColorStop(0.6, 'rgba(244, 114, 182, 0.75)');
+            fGrad.addColorStop(1, 'rgba(219, 39, 119, 0.3)');
+            ctx.fillStyle = fGrad;
+            ctx.strokeStyle = '#fbcfe8';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.ellipse(-6, -6, 13, 7, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // --- FAR WING (Dancing & Cheering behind torso) ---
+        fill3DSphere(
+            faceShiftX * 0.35,
+            -3 - wingCheerAngleR * 6,
+            11.5,
+            6.5,
+            -0.25 - wingCheerAngleR * dirX,
+            wingLight, cWing, wingDark
+        );
+
+        // --- 3D SCULPTED TAIL FEATHERS (Wagging to the rhythm!) ---
+        ctx.save();
+        ctx.translate(backShiftX * 1.25, -4 + tailWag * 0.5);
+        ctx.rotate(-dirX * 0.35 + tailWag * 0.06);
+        fill3DSphere(0, 0, 9, 6, 0.4 * dirX, bodyLight, bodyMid, bodyDark);
+        ctx.restore();
+
+        // --- 3D VOLUMETRIC TORSO / BODY ---
+        ctx.save();
+        const torsoGrad = ctx.createRadialGradient(
+            faceShiftX * 0.5 - 6, -10, 3,
+            0, -2, 28
+        );
+        torsoGrad.addColorStop(0, '#ffffff');
+        torsoGrad.addColorStop(0.15, bodyLight);
+        torsoGrad.addColorStop(0.55, bodyMid);
+        torsoGrad.addColorStop(0.85, bodyDark);
+        torsoGrad.addColorStop(1, bodyDeep);
+
+        ctx.fillStyle = torsoGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, -1, 23, 14.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Specular glossy rim on chest
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+        ctx.beginPath();
+        ctx.ellipse(faceShiftX * 0.45, -6, 9, 4.5, -0.2 * dirX, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.ellipse(0, -1, 23, 14.5, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        // --- BODY COSTUME OVERLAYS (Belts, Chains, Ties, Shields) ---
+        if (key === 'luchador') {
+            ctx.save();
+            ctx.fillStyle = '#facc15';
+            ctx.strokeStyle = '#854d0e';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.ellipse(0, 4, 21, 4.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            fill3DSphere(faceShiftX * 0.6, 4, 5, 4, 0, '#fef08a', '#eab308', '#dc2626', true);
+            ctx.restore();
+        } else if (key === 'priest') {
+            ctx.save();
+            ctx.strokeStyle = '#fef08a';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(faceShiftX * 0.5 - 4, -12);
+            ctx.lineTo(faceShiftX * 0.7, 2);
+            ctx.lineTo(faceShiftX * 0.5 + 4, -12);
+            ctx.stroke();
+            ctx.restore();
+        } else if (key === 'crypto' || key === 'chef') {
+            ctx.save();
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.moveTo(faceShiftX * 0.65 - 3, -11);
+            ctx.lineTo(faceShiftX * 0.8, 3);
+            ctx.lineTo(faceShiftX * 0.65 + 3, -11);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        } else if (key === 'gunslinger') {
+            ctx.save();
+            ctx.fillStyle = '#dc2626';
+            ctx.strokeStyle = '#7f1d1d';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(faceShiftX * 0.3 - 8, -12);
+            ctx.quadraticCurveTo(faceShiftX * 0.8, -4, faceShiftX * 0.85, 3);
+            ctx.lineTo(faceShiftX * 0.3 + 8, -11);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+        } else if (key === 'pharaoh') {
+            ctx.save();
+            ctx.fillStyle = '#facc15';
+            ctx.strokeStyle = '#1d4ed8';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.ellipse(faceShiftX * 0.4, -11, 13, 4.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+        } else if (key === 'punk') {
+            ctx.save();
+            ctx.fillStyle = '#18181b';
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.roundRect(faceShiftX * 0.3 - 10, -13, 20, 4.5, 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // --- NEAR 3D WING (Flapping & Raising in Celebration!) ---
+        fill3DSphere(
+            -faceShiftX * 0.22,
+            0 - wingCheerAngleL * 6.5,
+            12.8,
+            7.2,
+            0.12 * dirX - wingCheerAngleL * dirX,
+            wingLight, cWing, wingDark
+        );
+
+        // Props held on near side (Shield, Potion)
+        if (key === 'knight') {
+            fill3DSphere(-faceShiftX * 0.1 + 3 * dirX, 1 - wingCheerAngleL * 4, 8.5, 10.5, -0.1, '#93c5fd', '#2563eb', '#1e3a8a');
+            ctx.strokeStyle = '#fde047';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        } else if (key === 'alchemist') {
+            fill3DSphere(faceShiftX * 0.3, 2 - wingCheerAngleL * 4, 6.5, 6.5, 0, '#bbf7d0', '#22c55e', '#14532d');
+        }
+
+        // --- 3D VOLUMETRIC HEAD SPHERE (With Groove Head-Bob & Tilt) ---
+        ctx.save();
+        const headX = faceShiftX * 0.85;
+        const headY = -21 + headBobY;
+        const headR = 14.8;
+
+        ctx.translate(headX, headY);
+        ctx.rotate(headTilt * dirX);
+        ctx.translate(-headX, -headY);
+
+        fill3DSphere(headX, headY, headR, headR * 0.96, 0, bodyLight, bodyMid, bodyDark);
+
+        // Luchador Mask over Head
+        if (key === 'luchador') {
+            fill3DSphere(headX, headY, headR * 1.01, headR * 0.97, 0, '#fb923c', '#ea580c', '#9a3412');
+        }
+
+        // --- 3D SCULPTED GLOSSY BEAK (Quacking / Singing to the Beat!) ---
+        const beakX = headX + dirX * 13.5;
+        const beakY = headY + 2.5;
+        ctx.save();
+        ctx.translate(beakX, beakY);
+        const beakGrad = ctx.createRadialGradient(-2 * dirX, -3, 1, 0, 0, 12);
+        beakGrad.addColorStop(0, '#fed7aa');
+        beakGrad.addColorStop(0.3, '#fb923c');
+        beakGrad.addColorStop(0.8, '#ea580c');
+        beakGrad.addColorStop(1, '#9a3412');
+
+        ctx.fillStyle = beakGrad;
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.ellipse(dirX * 2, 0, 9.5, 5.2 + beakOpen * 1.8, 0.08 * dirX, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Happy open laughing mouth when dancing!
+        if (beakOpen > 0.25) {
+            ctx.fillStyle = '#7f1d1d';
+            ctx.beginPath();
+            ctx.ellipse(dirX * 3.5, 1.2, 5.2, 2.2 * beakOpen, 0.08 * dirX, 0, Math.PI * 2);
+            ctx.fill();
+            // Cute pink tongue
+            ctx.fillStyle = '#fb7185';
+            ctx.beginPath();
+            ctx.ellipse(dirX * 3.2, 2.0, 3.0, 1.1 * beakOpen, 0, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            ctx.strokeStyle = '#7c2d12';
+            ctx.lineWidth = 1.3;
+            ctx.beginPath();
+            ctx.moveTo(-4 * dirX, 0.5);
+            ctx.quadraticCurveTo(2 * dirX, 2.5, 8 * dirX, 0.2);
+            ctx.stroke();
+        }
+
+        // Vampire Fangs or Detective Pipe
+        if (key === 'vampire') {
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(2 * dirX, 3);
+            ctx.lineTo(3.5 * dirX, 7.5);
+            ctx.lineTo(5 * dirX, 3);
+            ctx.fill();
+        } else if (key === 'detective') {
+            ctx.strokeStyle = '#451a03';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(5 * dirX, 2);
+            ctx.quadraticCurveTo(13 * dirX, 8, 16 * dirX, 2);
+            ctx.stroke();
+            fill3DSphere(16 * dirX, 1, 3, 3, 0, '#a16207', '#78350f', '#451a03', false);
+        }
+        ctx.restore();
+
+        // --- 3D STEREOSCOPIC HAPPY EYES & BLUSH ---
+        const eyeBaseX = headX + dirX * 6.5;
+        const eyeBaseY = headY - 2;
+
+        // Rosy 3D Cheek Blush
+        ctx.save();
+        ctx.fillStyle = 'rgba(251, 113, 133, 0.65)';
+        ctx.beginPath();
+        ctx.ellipse(eyeBaseX - dirX * 2, eyeBaseY + 6.5, 4.2, 2.4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Switch between joyful squinting arc eyes on high jumps and starry 3D eyes!
+        const isJoySquint = (danceY < -11) || ((Math.floor(t * 2 + placeIndex) % 4) === 0);
+        ctx.save();
+        if (isJoySquint) {
+            // Super Happy "^" Joyful Dancing Eye!
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 2.6;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.arc(eyeBaseX, eyeBaseY + 1.5, 4.0, Math.PI * 1.12, Math.PI * 1.88);
+            ctx.stroke();
+        } else {
+            // Glossy 3D Eye Sphere
+            fill3DSphere(eyeBaseX, eyeBaseY, 4.5, 4.7, 0, '#ffffff', '#f8fafc', '#cbd5e1', true);
+            // Iris / Pupil
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.arc(eyeBaseX + dirX * 1.4, eyeBaseY, 2.2, 0, Math.PI * 2);
+            ctx.fill();
+            // Sparkling Catchlights
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(eyeBaseX + dirX * 2.1, eyeBaseY - 1.2, 1.1, 0, Math.PI * 2);
+            ctx.arc(eyeBaseX + dirX * 0.5, eyeBaseY + 1.1, 0.55, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+
+        // --- EYEWEAR / VISORS / BEARDS ---
+        if (key === 'crypto' || key === 'ninja' || key === 'gamer' || key === 'dj' || key === 'mecha' || key === 'diver') {
+            ctx.save();
+            const visorCol = key === 'crypto' ? '#ef4444' : key === 'gamer' ? '#ec4899' : key === 'dj' ? '#10b981' : '#22d3ee';
+            const vGrad = ctx.createLinearGradient(eyeBaseX - 8, eyeBaseY - 4, eyeBaseX + 10, eyeBaseY + 4);
+            vGrad.addColorStop(0, '#ffffff');
+            vGrad.addColorStop(0.25, visorCol);
+            vGrad.addColorStop(1, shadeHexColor(visorCol, -35));
+            ctx.fillStyle = vGrad;
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            ctx.roundRect(eyeBaseX - 6, eyeBaseY - 3.5, 13, 6.2, 2.5);
+            ctx.fill();
+            ctx.stroke();
+
+            if (key === 'crypto') {
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 2.4;
+                ctx.shadowColor = '#ef4444';
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.moveTo(eyeBaseX + 6 * dirX, eyeBaseY);
+                ctx.lineTo(eyeBaseX + 28 * dirX, eyeBaseY - 3);
+                ctx.stroke();
+            }
+            ctx.restore();
+        } else if (key === 'pirate') {
+            ctx.save();
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(headX - 11, headY - 6);
+            ctx.lineTo(headX + 11, headY + 2);
+            ctx.stroke();
+            fill3DSphere(eyeBaseX, eyeBaseY, 4.2, 4.2, 0, '#334155', '#0f172a', '#020617', true);
+            ctx.restore();
+        } else if (key === 'wizard' || key === 'viking') {
+            const bColL = key === 'wizard' ? '#ffffff' : '#fcd34d';
+            const bColM = key === 'wizard' ? '#e2e8f0' : '#d97706';
+            const bColD = key === 'wizard' ? '#94a3b8' : '#78350f';
+            fill3DSphere(headX + dirX * 5, headY + 12, 6, 8, -0.2 * dirX, bColL, bColM, bColD, true);
+        }
+
+        // --- 3D VOLUMETRIC ARCHETYPE HEADGEAR & CROWNS (Bouncing slightly on high jumps!) ---
+        const hatBounce = Math.min(0, danceY * 0.22);
+        const hatX = headX;
+        const hatY = headY - 12 + hatBounce;
+
+        ctx.save();
+        switch (key) {
+            case 'king': {
+                const cGrad = ctx.createLinearGradient(hatX - 13, hatY - 10, hatX + 13, hatY + 4);
+                cGrad.addColorStop(0, '#fef08a');
+                cGrad.addColorStop(0.5, '#facc15');
+                cGrad.addColorStop(1, '#b45309');
+                ctx.fillStyle = cGrad;
+                ctx.strokeStyle = '#78350f';
+                ctx.lineWidth = 1.8;
+                ctx.beginPath();
+                ctx.moveTo(hatX - 12, hatY + 3);
+                ctx.lineTo(hatX - 13, hatY - 8);
+                ctx.lineTo(hatX - 6, hatY - 2);
+                ctx.lineTo(hatX, hatY - 11);
+                ctx.lineTo(hatX + 6, hatY - 2);
+                ctx.lineTo(hatX + 13, hatY - 8);
+                ctx.lineTo(hatX + 12, hatY + 3);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                fill3DSphere(hatX, hatY - 3, 2.5, 2.5, 0, '#fca5a5', '#ef4444', '#7f1d1d', false);
+                break;
+            }
+            case 'knight': {
+                fill3DSphere(hatX - dirX * 3, hatY - 6, 10, 4.5, -0.3 * dirX, '#fca5a5', '#ef4444', '#991b1b', true);
+                fill3DSphere(headX, headY - 2, 15.5, 13.5, 0, '#ffffff', '#cbd5e1', '#475569', true);
+                ctx.strokeStyle = '#0f172a';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(headX + dirX * 2, headY - 2);
+                ctx.lineTo(headX + dirX * 14, headY - 2);
+                ctx.stroke();
+                break;
+            }
+            case 'dj':
+            case 'gamer': {
+                const hpCol = key === 'dj' ? '#10b981' : '#a855f7';
+                ctx.strokeStyle = hpCol;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(headX, headY, 15.2, Math.PI * 1.1, Math.PI * 1.9);
+                ctx.stroke();
+                fill3DSphere(headX - dirX * 2, headY + 1, 6, 7.5, 0, '#6ee7b7', hpCol, '#064e3b', true);
+                break;
+            }
+            case 'wizard': {
+                fill3DSphere(hatX, hatY + 2, 18, 4.5, 0, '#a855f7', '#5b21b6', '#2e1065', true);
+                const wGrad = ctx.createLinearGradient(hatX - 10, hatY, hatX + 10, hatY - 18);
+                wGrad.addColorStop(0, '#7e22ce');
+                wGrad.addColorStop(1, '#3b0764');
+                ctx.fillStyle = wGrad;
+                ctx.strokeStyle = '#c084fc';
+                ctx.lineWidth = 1.6;
+                ctx.beginPath();
+                ctx.moveTo(hatX - 11, hatY + 1);
+                ctx.lineTo(hatX - 2, hatY - 18);
+                ctx.lineTo(hatX + 12, hatY - 14);
+                ctx.lineTo(hatX + 11, hatY + 1);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                break;
+            }
+            case 'gunslinger':
+            case 'detective': {
+                const hColM = key === 'gunslinger' ? '#92400e' : '#b45309';
+                fill3DSphere(hatX, hatY + 2, 19, 4.5, 0, '#d97706', hColM, '#451a03', true);
+                fill3DSphere(hatX, hatY - 3, 11.5, 6.5, 0, '#f59e0b', hColM, '#451a03', true);
+                break;
+            }
+            case 'saiyan':
+            case 'punk': {
+                const sColL = key === 'saiyan' ? '#fef08a' : '#f9a8d4';
+                const sColM = key === 'saiyan' ? '#facc15' : '#ec4899';
+                const sColD = key === 'saiyan' ? '#a16207' : '#831843';
+                fill3DSphere(hatX - 7, hatY - 2, 5, 10, -0.5, sColL, sColM, sColD, true);
+                fill3DSphere(hatX + 7, hatY - 2, 5, 10, 0.5, sColL, sColM, sColD, true);
+                fill3DSphere(hatX, hatY - 5, 6, 12, 0, sColL, sColM, sColD, true);
+                break;
+            }
+            case 'chef': {
+                fill3DSphere(hatX - 5, hatY - 5, 7, 7, 0, '#ffffff', '#f1f5f9', '#94a3b8', true);
+                fill3DSphere(hatX + 5, hatY - 5, 7, 7, 0, '#ffffff', '#f1f5f9', '#94a3b8', true);
+                fill3DSphere(hatX, hatY - 7, 8, 8, 0, '#ffffff', '#f8fafc', '#cbd5e1', true);
+                break;
+            }
+            case 'viking': {
+                fill3DSphere(hatX - 12, hatY - 3, 6, 3.5, -0.6, '#fef3c7', '#fde68a', '#92400e', true);
+                fill3DSphere(hatX + 12, hatY - 3, 6, 3.5, 0.6, '#fef3c7', '#fde68a', '#92400e', true);
+                fill3DSphere(hatX, hatY + 1, 13, 7, 0, '#cbd5e1', '#64748b', '#1e293b', true);
+                break;
+            }
+            case 'astronaut': {
+                const gGrad = ctx.createRadialGradient(headX - 6, headY - 8, 2, headX, headY, 19);
+                gGrad.addColorStop(0, 'rgba(255, 255, 255, 0.65)');
+                gGrad.addColorStop(0.35, 'rgba(56, 189, 248, 0.18)');
+                gGrad.addColorStop(0.85, 'rgba(14, 165, 233, 0.35)');
+                gGrad.addColorStop(1, 'rgba(248, 250, 252, 0.85)');
+                ctx.fillStyle = gGrad;
+                ctx.strokeStyle = '#f8fafc';
+                ctx.lineWidth = 2.2;
+                ctx.beginPath();
+                ctx.arc(headX, headY, 18.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                break;
+            }
+            case 'pirate': {
+                fill3DSphere(hatX, hatY, 16, 6.5, 0, '#475569', '#1e293b', '#020617', true);
+                ctx.strokeStyle = '#fbbf24';
+                ctx.lineWidth = 1.6;
+                ctx.stroke();
+                break;
+            }
+            case 'priest': {
+                ctx.strokeStyle = '#fde047';
+                ctx.lineWidth = 3;
+                ctx.shadowColor = '#facc15';
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.ellipse(hatX, hatY - 5, 12, 3.5, 0, 0, Math.PI * 2);
+                ctx.stroke();
+                break;
+            }
+            case 'samurai':
+            case 'pharaoh': {
+                const pColL = key === 'samurai' ? '#fca5a5' : '#60a5fa';
+                const pColM = key === 'samurai' ? '#991b1b' : '#1d4ed8';
+                fill3DSphere(hatX, hatY, 15, 6.5, 0, pColL, pColM, '#0f172a', true);
+                fill3DSphere(hatX, hatY - 4, 3.5, 3.5, 0, '#fef08a', '#facc15', '#b45309', false);
+                break;
+            }
+            default: {
+                if (placeIndex === 0) {
+                    fill3DSphere(hatX, hatY - 1, 9, 4.5, 0, '#fef08a', '#facc15', '#ca8a04', true);
+                }
+                break;
+            }
+        }
+        ctx.restore();
+        ctx.restore(); // End Head tilt transform
+
+        ctx.restore(); // End Duck 3D Dancing Center transform
+
+        // --- 6. FLOATING HAPPY DANCE NOTES, STARS & HEARTS AROUND DUCK ---
+        ctx.save();
+        const symbols = ['♪', '♫', '★', '✨', '♥'];
+        const noteCount = placeIndex === 0 ? 4 : 3;
+        ctx.font = 'bold 11px sans-serif';
+        ctx.textAlign = 'center';
+        for (let i = 0; i < noteCount; i++) {
+            const cycle = (t * 0.95 + i * (1 / noteCount) + placeIndex * 0.3) % 1;
+            const angle = i * 2.1 + t * 1.6;
+            const nx = cx + Math.cos(angle) * (30 + cycle * 14);
+            const ny = pedestalY - 22 - cycle * 58;
+            const alpha = Math.sin(cycle * Math.PI);
+            ctx.fillStyle = i % 2 === 0
+                ? `rgba(250, 204, 21, ${alpha.toFixed(2)})`
+                : `rgba(56, 189, 248, ${alpha.toFixed(2)})`;
+            ctx.fillText(symbols[(i + placeIndex) % symbols.length], nx, ny);
+        }
+        ctx.restore();
+    }
+
+    function initPodium3DCanvases(podiumSlots) {
+        stopPodium3DAnimation();
+        const dpr = window.devicePixelRatio || 1;
+        const nowSec = performance.now() / 1000;
+
+        podium3dSlotStates = podiumSlots.map((slot, idx) => {
+            const canvas = document.getElementById('podium3dCanvas_' + idx);
+            if (!canvas) return null;
+            const cssW = 156;
+            const cssH = 132;
+            canvas.width = Math.round(cssW * dpr);
+            canvas.height = Math.round(cssH * dpr);
+            const ctx = canvas.getContext('2d');
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            const initialDanceIdx = (idx + Math.floor(Math.random() * PODIUM_DANCE_STYLES.length)) % PODIUM_DANCE_STYLES.length;
+            const badge = document.getElementById('podiumDanceBadge_' + idx);
+            if (badge) {
+                badge.textContent = PODIUM_DANCE_STYLES[initialDanceIdx].label;
+            }
+
+            const state = {
+                slotIdx: idx,
+                canvas,
+                ctx,
+                racer: slot.racer,
+                placeIndex: slot.placeIndex,
+                w: cssW,
+                h: cssH,
+                userYawOffset: 0,
+                isDragging: false,
+                dragMoved: 0,
+                lastX: 0,
+                danceStyleIndex: initialDanceIdx,
+                nextDanceSwitchTime: nowSec + 3.5 + idx * 1.4,
+                cheerJumpBoost: 0.8
+            };
+
+            // Allow interactive 3D spin on drag AND dance switch on click!
+            canvas.addEventListener('mousedown', (e) => {
+                state.isDragging = true;
+                state.dragMoved = 0;
+                state.lastX = e.clientX;
+            });
+            window.addEventListener('mouseup', () => {
+                if (state.isDragging && state.dragMoved < 5) {
+                    window.cyclePodiumDance(idx);
+                }
+                state.isDragging = false;
+            });
+            canvas.addEventListener('mousemove', (e) => {
+                if (state.isDragging) {
+                    const dx = e.clientX - state.lastX;
+                    state.dragMoved += Math.abs(dx);
+                    state.lastX = e.clientX;
+                    state.userYawOffset += dx * 0.025;
+                }
+            });
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    state.isDragging = true;
+                    state.dragMoved = 0;
+                    state.lastX = e.touches[0].clientX;
+                }
+            }, { passive: true });
+            canvas.addEventListener('touchend', () => {
+                if (state.isDragging && state.dragMoved < 6) {
+                    window.cyclePodiumDance(idx);
+                }
+                state.isDragging = false;
+            }, { passive: true });
+            canvas.addEventListener('touchmove', (e) => {
+                if (state.isDragging && e.touches.length === 1) {
+                    const dx = e.touches[0].clientX - state.lastX;
+                    state.dragMoved += Math.abs(dx);
+                    state.lastX = e.touches[0].clientX;
+                    state.userYawOffset += dx * 0.025;
+                }
+            }, { passive: true });
+
+            return state;
+        }).filter(Boolean);
+
+        function animatePodium3D(now) {
+            const t = now / 1000;
+            podium3dSlotStates.forEach(st => {
+                draw3DDuckCharacter(st.ctx, st, t);
+            });
+            podium3dAnimId = requestAnimationFrame(animatePodium3D);
+        }
+
+        podium3dAnimId = requestAnimationFrame(animatePodium3D);
     }
 
     function startConfetti() {
@@ -2574,6 +3709,11 @@
     window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 150));
 
     window.addEventListener('DOMContentLoaded', () => {
+        // Sync 60FPS+ checkbox state from localStorage
+        const highFpsCb = document.getElementById('highFpsCheckbox');
+        if (highFpsCb) {
+            highFpsCb.checked = window.highFpsMode;
+        }
         const canvas = document.getElementById('raceCanvas');
         if (!canvas) return;
 
