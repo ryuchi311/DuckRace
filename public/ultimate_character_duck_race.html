@@ -40,10 +40,10 @@
             --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Plus Jakarta Sans', system-ui, sans-serif;
             --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Plus Jakarta Sans', system-ui, sans-serif;
             --font-mono: 'SF Mono', 'JetBrains Mono', ui-monospace, Menlo, Monaco, monospace;
-            --ios-glass: rgba(15, 23, 42, 0.72);
-            --ios-glass-card: rgba(18, 26, 47, 0.65);
-            --ios-glass-border: rgba(255, 255, 255, 0.12);
-            --ios-glass-highlight: rgba(255, 255, 255, 0.22);
+            --ios-glass: rgba(13, 20, 36, 0.76);
+            --ios-glass-card: rgba(16, 24, 46, 0.68);
+            --ios-glass-border: rgba(255, 255, 255, 0.14);
+            --ios-glass-highlight: rgba(255, 255, 255, 0.28);
         }
 
         /* Futuristic iOS Space Dark Aurora Background */
@@ -67,10 +67,11 @@
             left: 10vw;
             width: 80vw;
             height: 50vh;
-            background: radial-gradient(circle, rgba(56, 189, 248, 0.14) 0%, rgba(168, 85, 247, 0.08) 50%, transparent 75%);
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.16) 0%, rgba(168, 85, 247, 0.1) 50%, transparent 75%);
             filter: blur(80px);
             pointer-events: none;
             z-index: 0;
+            animation: orbFloat1 18s ease-in-out infinite alternate;
         }
         body::after {
             content: '';
@@ -79,10 +80,20 @@
             right: 5vw;
             width: 70vw;
             height: 45vh;
-            background: radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, rgba(236, 72, 153, 0.08) 50%, transparent 75%);
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, rgba(236, 72, 153, 0.1) 50%, transparent 75%);
             filter: blur(90px);
             pointer-events: none;
             z-index: 0;
+            animation: orbFloat2 22s ease-in-out infinite alternate;
+        }
+
+        @keyframes orbFloat1 {
+            0% { transform: translateY(0px) scale(1); }
+            100% { transform: translateY(40px) scale(1.08); }
+        }
+        @keyframes orbFloat2 {
+            0% { transform: translateY(0px) scale(1); }
+            100% { transform: translateY(-35px) scale(1.06); }
         }
 
         .font-display {
@@ -93,31 +104,33 @@
         /* Apple iOS Ultra-Glass Panels with Specular Micro-Borders */
         .ios-glass {
             background: var(--ios-glass);
-            backdrop-filter: blur(28px) saturate(190%);
-            -webkit-backdrop-filter: blur(28px) saturate(190%);
+            backdrop-filter: blur(32px) saturate(210%);
+            -webkit-backdrop-filter: blur(32px) saturate(210%);
             border: 1px solid var(--ios-glass-border);
             box-shadow: 
-                0 16px 40px -8px rgba(0, 0, 0, 0.55),
-                0 0 0 1px rgba(255, 255, 255, 0.06) inset,
-                0 1px 0 0 rgba(255, 255, 255, 0.22) inset;
+                0 18px 44px -8px rgba(0, 0, 0, 0.65),
+                0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+                0 1px 0 0 rgba(255, 255, 255, 0.28) inset;
         }
 
         .ios-card {
             background: var(--ios-glass-card);
-            backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            backdrop-filter: blur(28px) saturate(190%);
+            -webkit-backdrop-filter: blur(28px) saturate(190%);
             border: 1px solid var(--ios-glass-border);
             border-radius: 1.5rem;
             box-shadow: 
-                0 10px 30px -6px rgba(0, 0, 0, 0.4),
-                0 1px 0 0 rgba(255, 255, 255, 0.18) inset;
-            transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+                0 12px 36px -6px rgba(0, 0, 0, 0.45),
+                0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+                0 1px 0 0 rgba(255, 255, 255, 0.2) inset;
+            transition: all 0.26s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .ios-card:hover {
-            border-color: rgba(255, 255, 255, 0.24);
+            border-color: rgba(255, 255, 255, 0.28);
             box-shadow: 
-                0 18px 46px -8px rgba(0, 0, 0, 0.58),
-                0 1px 0 0 rgba(255, 255, 255, 0.35) inset;
+                0 20px 50px -8px rgba(0, 0, 0, 0.62),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+                0 1px 0 0 rgba(255, 255, 255, 0.4) inset;
         }
 
         /* Apple iOS Squircle Buttons with Haptic Spring & Specular Highlight */
@@ -137,19 +150,19 @@
             left: 0;
             right: 0;
             height: 40%;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 100%);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 100%);
             border-top-left-radius: inherit;
             border-top-right-radius: inherit;
             pointer-events: none;
         }
         .btn-game:hover, .ios-btn:hover {
-            transform: translateY(-1.5px) scale(1.02);
-            filter: brightness(1.08);
-            box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.55);
+            transform: translateY(-2px) scale(1.025);
+            filter: brightness(1.1);
+            box-shadow: 0 10px 28px -4px rgba(0, 0, 0, 0.6);
         }
         .btn-game:active, .ios-btn:active {
-            transform: translateY(1px) scale(0.965);
-            filter: brightness(0.95);
+            transform: translateY(1.5px) scale(0.96);
+            filter: brightness(0.92);
             box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.4);
         }
 
@@ -157,19 +170,38 @@
         .cam-pill-active {
             background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%) !important;
             color: #ffffff !important;
-            border-color: rgba(255, 255, 255, 0.4) !important;
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.55), 0 1px 0 rgba(255, 255, 255, 0.5) inset !important;
+            border-color: rgba(255, 255, 255, 0.5) !important;
+            box-shadow: 0 0 22px rgba(56, 189, 248, 0.6), 0 1px 0 rgba(255, 255, 255, 0.5) inset !important;
             transform: scale(1.05);
         }
 
         /* Dynamic Island Indicator Style */
         .ios-dynamic-island {
             background: rgba(3, 7, 18, 0.88);
-            backdrop-filter: blur(32px);
-            -webkit-backdrop-filter: blur(32px);
-            border: 1px solid rgba(255, 255, 255, 0.16);
+            backdrop-filter: blur(36px);
+            -webkit-backdrop-filter: blur(36px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             border-radius: 9999px;
-            box-shadow: 0 10px 32px -4px rgba(0, 0, 0, 0.65), 0 1px 0 rgba(255, 255, 255, 0.2) inset;
+            box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.24) inset;
+        }
+
+        /* iOS Frosted Floating Dock */
+        .ios-dock {
+            background: rgba(15, 23, 42, 0.78);
+            backdrop-filter: blur(32px) saturate(200%);
+            -webkit-backdrop-filter: blur(32px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 1.25rem;
+            box-shadow: 0 14px 40px -6px rgba(0, 0, 0, 0.65), 0 1px 0 rgba(255, 255, 255, 0.25) inset;
+        }
+
+        /* iOS Native Segmented Control */
+        .ios-segmented {
+            background: rgba(3, 7, 18, 0.65);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 0.85rem;
+            padding: 3px;
         }
 
         /* Hide scrollbars elegantly */
@@ -185,11 +217,11 @@
             background: transparent;
         }
         ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 9999px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.32);
+            background: rgba(255, 255, 255, 0.38);
         }
 
         @keyframes bob {
@@ -201,7 +233,7 @@
         }
         @keyframes pulse-glow {
             0%, 100% { filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.75)); }
-            50% { filter: drop-shadow(0 0 22px rgba(250, 204, 21, 1)); }
+            50% { filter: drop-shadow(0 0 24px rgba(250, 204, 21, 1)); }
         }
         .podium-glow {
             animation: pulse-glow 2s infinite;
@@ -260,7 +292,7 @@
                 </button>
 
                 <!-- Audio Toggles Group -->
-                <div class="flex items-center bg-slate-950/80 border border-slate-800 rounded-xl p-0.5">
+                <div class="flex items-center ios-segmented p-0.5">
                     <button id="musicToggleBtn" onclick="toggleMusic()" class="hover:bg-slate-800 text-amber-300 px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition" title="Toggle Music (BGM)">
                         <span id="musicIcon">🎵</span>
                         <span id="musicText" class="hidden lg:inline text-[11px]">BGM ON</span>
@@ -536,7 +568,7 @@ Emily
                     
                     <!-- Left: Race Clock & Progress -->
                     <div class="flex items-center gap-2 sm:gap-3 min-w-[180px] flex-1 max-w-full sm:max-w-sm">
-                        <div class="bg-slate-950 border border-slate-800 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-center shrink-0">
+                        <div class="ios-dynamic-island px-3 sm:px-4 py-1 sm:py-1.5 text-center shrink-0 border-white/20">
                             <div class="text-[8px] sm:text-[9px] uppercase tracking-wider text-slate-400 font-extrabold">CLOCK</div>
                             <div id="hudTimer" class="font-mono text-sm sm:text-base font-black text-amber-400">00.0s</div>
                         </div>
@@ -567,7 +599,7 @@ Emily
                     </div>
 
                     <!-- Center: Target Duck Selector & Zoom Control -->
-                    <div class="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 bg-slate-950/90 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl border border-slate-800 w-full sm:w-auto">
+                    <div class="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 ios-dock px-2.5 sm:px-3 py-1 sm:py-1.5 w-full sm:w-auto">
                         <span class="text-[10px] sm:text-[11px] text-slate-400 font-extrabold uppercase tracking-wider shrink-0">🎯 Target:</span>
                         <div class="flex items-center gap-1 flex-1 sm:flex-initial justify-end">
                             <button onclick="cycleTargetDuck(-1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded-lg text-xs font-bold transition" title="Previous Duck">◀</button>
@@ -668,7 +700,7 @@ Emily
                 <div id="tvCutFlash" class="hidden pointer-events-none absolute inset-0 bg-white z-30"></div>
 
                 <!-- Floating Live Top 5 Leaderboard Overlay (Top-Left) -->
-                <div class="absolute top-2 left-2 sm:top-3 sm:left-3 z-10 w-44 sm:w-64 bg-slate-950/85 backdrop-blur-md border border-slate-700/80 rounded-xl sm:rounded-2xl p-2 sm:p-3 shadow-xl">
+                <div class="absolute top-2 left-2 sm:top-3 sm:left-3 z-10 w-48 sm:w-64 ios-dock p-2 sm:p-3 shadow-2xl">
                     <div class="flex items-center justify-between border-b border-slate-800 pb-1 sm:pb-1.5 mb-1.5 sm:mb-2">
                         <span class="font-display text-[10px] sm:text-xs font-bold tracking-wider uppercase text-amber-400 flex items-center gap-1">
                             <span>🏆</span> <span>STANDINGS</span> <span class="text-[9px] text-slate-400 font-normal hidden sm:inline">(Tap POV)</span>
@@ -684,7 +716,7 @@ Emily
 
                 <!-- Floating Active Camera Telemetry & Quick POV Controls (Top-Right) -->
                 <div id="cameraTelemetryOverlay" class="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex flex-col items-end gap-1.5 sm:gap-2 pointer-events-none">
-                    <div class="bg-slate-950/85 backdrop-blur-md border border-slate-700/80 rounded-xl sm:rounded-2xl px-2.5 py-1.5 sm:px-3.5 sm:py-2.5 shadow-xl flex flex-col gap-0.5 sm:gap-1 min-w-[145px] sm:min-w-[215px]">
+                    <div class="ios-dock px-3 py-1.5 sm:px-4 sm:py-2.5 shadow-2xl flex flex-col gap-0.5 sm:gap-1 min-w-[145px] sm:min-w-[215px]">
                         <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-1.5">
                                 <span class="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-rose-500 animate-ping"></span>
@@ -699,7 +731,7 @@ Emily
                     </div>
 
                     <!-- Interactive Duck Switcher Pill when in 3D POV / Chase / Target modes -->
-                    <div class="pointer-events-auto hidden sm:flex items-center gap-1 bg-slate-950/85 backdrop-blur-md border border-slate-700/80 rounded-xl p-1 shadow-lg">
+                    <div class="pointer-events-auto hidden sm:flex items-center gap-1 ios-dock p-1.5 shadow-xl">
                         <button onclick="cycleTargetDuck(-1)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded-lg text-[11px] font-bold transition">◀ Prev Duck</button>
                         <button onclick="selectTargetDuckById('auto_leader')" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 px-2 py-1 rounded-lg text-[11px] font-bold transition">👑 Leader</button>
                         <button onclick="cycleTargetDuck(1)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded-lg text-[11px] font-bold transition">Next Duck ▶</button>
@@ -790,7 +822,7 @@ Emily
 
                 <!-- Live Sports Play-by-Play Commentary Ticker (Bottom) -->
                 <div class="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3 z-10 flex items-center justify-between gap-2 sm:gap-3 pointer-events-none">
-                    <div class="flex-1 bg-slate-950/90 backdrop-blur-md border border-slate-700/80 rounded-xl px-2.5 py-1.5 sm:px-3.5 sm:py-2 shadow-xl flex items-center gap-2 sm:gap-3 overflow-hidden">
+                    <div class="flex-1 ios-dock px-3 py-1.5 sm:px-4 sm:py-2 shadow-2xl flex items-center gap-2.5 sm:gap-3 overflow-hidden">
                         <span class="bg-rose-600 text-white text-[9px] sm:text-[10px] font-extrabold uppercase px-1.5 sm:px-2 py-0.5 rounded-md tracking-wider shrink-0 flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span> LIVE
                         </span>
@@ -799,7 +831,7 @@ Emily
                         </p>
                     </div>
                     <!-- Legend Pill & High FPS Checkbox -->
-                    <div class="hidden sm:flex items-center gap-2 sm:gap-2.5 bg-slate-950/90 backdrop-blur-md border border-slate-700/80 rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs text-slate-300 shrink-0 pointer-events-auto">
+                    <div class="hidden sm:flex items-center gap-2.5 sm:gap-3 ios-dock px-3 sm:px-4 py-1.5 sm:py-2 text-xs text-slate-300 shrink-0 pointer-events-auto">
                         <span class="hidden xl:flex items-center gap-1"><span class="text-amber-400">🪶</span> Boost</span>
                         <span class="hidden xl:flex items-center gap-1"><span class="text-orange-400">🍞</span> Bread</span>
                         <span class="hidden xl:flex items-center gap-1"><span class="text-cyan-400">🌀</span> Whirlpool</span>
