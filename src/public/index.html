@@ -555,29 +555,31 @@ Emily
     <!-- ========================================================== -->
     <section id="raceSection" class="hidden flex-col gap-2 sm:gap-2.5 flex-1">
             
-            <!-- Sleek Broadcast HUD Master Bar -->
-            <div class="ios-card p-2.5 sm:p-3.5 shadow-xl flex flex-col gap-2 sm:gap-2.5">
+                        <!-- Clean Professional Broadcast Director Console -->
+            <div class="ios-card p-3 sm:p-4 shadow-2xl flex flex-col gap-3">
                 
-                <!-- Row 1: Telemetry, Target Selector, Controls & Action Buttons -->
-                <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+                <!-- Top Row: Telemetry, Quick Settings & Race Controls -->
+                <div class="flex flex-wrap items-center justify-between gap-2.5 sm:gap-4">
                     
-                    <!-- Left: Race Clock & Progress -->
-                    <div class="flex items-center gap-2 sm:gap-3 min-w-[180px] flex-1 max-w-full sm:max-w-sm">
-                        <div class="ios-dynamic-island px-3 sm:px-4 py-1 sm:py-1.5 text-center shrink-0 border-white/20">
-                            <div class="text-[8px] sm:text-[9px] uppercase tracking-wider text-slate-400 font-extrabold">CLOCK</div>
-                            <div id="hudTimer" class="font-mono text-sm sm:text-base font-black text-amber-400">00.0s</div>
+                    <!-- Left: Master Clock & Arena Progress Bar -->
+                    <div class="flex items-center gap-3 flex-1 min-w-[240px] max-w-full sm:max-w-md">
+                        <!-- Clock Pill -->
+                        <div class="ios-dynamic-island px-3.5 py-1.5 flex flex-col items-center justify-center shrink-0 min-w-[70px]">
+                            <span class="text-[8px] uppercase tracking-wider text-slate-400 font-extrabold leading-none">TIME</span>
+                            <span id="hudTimer" class="font-mono text-sm sm:text-base font-black text-amber-300 leading-tight">00.0s</span>
                         </div>
 
-                        <div class="flex-1 min-w-[110px]">
-                            <div class="flex justify-between items-center text-[11px] sm:text-xs font-bold mb-1 gap-1">
-                                <div class="flex items-center gap-1">
-                                    <select onchange="changeTheme(this.value)" class="theme-select-sync bg-slate-950/90 border border-slate-700/80 rounded-lg px-1.5 py-0.5 text-[10px] sm:text-[11px] font-bold text-cyan-300 focus:outline-none focus:border-amber-400 max-w-[100px] sm:max-w-[125px] truncate cursor-pointer" title="Switch Arena Map">
+                        <!-- Track Map Selector & Live Progress -->
+                        <div class="flex-1 min-w-[130px]">
+                            <div class="flex items-center justify-between text-xs font-bold mb-1 gap-2">
+                                <div class="flex items-center gap-1.5">
+                                    <select onchange="changeTheme(this.value)" class="theme-select-sync bg-slate-900/90 border border-white/10 rounded-lg px-2 py-0.5 text-[11px] font-bold text-cyan-300 focus:outline-none focus:border-amber-400 cursor-pointer" title="Switch Arena Map">
                                         <option value="rapids">🏞️ Rapids</option>
                                         <option value="ocean">🏝️ Ocean</option>
                                         <option value="cyber">⚡ Cyber</option>
                                         <option value="lava">🌋 Lava</option>
                                     </select>
-                                    <select onchange="changeObstacleDifficulty(this.value)" class="difficulty-select-sync bg-slate-950/90 border border-amber-500/50 rounded-lg px-1.5 py-0.5 text-[10px] sm:text-[11px] font-black text-amber-300 focus:outline-none focus:border-amber-400 max-w-[95px] sm:max-w-[110px] truncate cursor-pointer" title="Host Obstacle Difficulty">
+                                    <select onchange="changeObstacleDifficulty(this.value)" class="difficulty-select-sync bg-slate-900/90 border border-amber-500/30 rounded-lg px-2 py-0.5 text-[11px] font-black text-amber-300 focus:outline-none focus:border-amber-400 cursor-pointer" title="Host Obstacle Difficulty">
                                         <option value="easy">🟢 Easy</option>
                                         <option value="normal" selected>🔵 Normal</option>
                                         <option value="hard">🟠 Hard</option>
@@ -585,102 +587,103 @@ Emily
                                     </select>
                                 </div>
                                 <span id="hudThemeLabel" class="hidden">🏞️ Rapids</span>
-                                <span id="hudProgressText" class="text-amber-300 font-mono text-[10px] sm:text-[11px] truncate">Leader: 0%</span>
+                                <span id="hudProgressText" class="text-amber-300 font-mono text-[11px] truncate">Leader: 0%</span>
                             </div>
-                            <div class="w-full h-2 sm:h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
+                            <div class="w-full h-2 bg-slate-950/80 rounded-full overflow-hidden border border-white/10 p-0.5">
                                 <div id="hudProgressBar" class="h-full bg-gradient-to-r from-cyan-400 via-amber-400 to-orange-500 rounded-full transition-all duration-100" style="width: 0%"></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Center: Target Duck Selector & Zoom Control -->
-                    <div class="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 ios-dock px-2.5 sm:px-3 py-1 sm:py-1.5 w-full sm:w-auto">
-                        <span class="text-[10px] sm:text-[11px] text-slate-400 font-extrabold uppercase tracking-wider shrink-0">🎯 Target:</span>
-                        <div class="flex items-center gap-1 flex-1 sm:flex-initial justify-end">
-                            <button onclick="cycleTargetDuck(-1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded-lg text-xs font-bold transition" title="Previous Duck">◀</button>
-                            <select id="targetDuckSelect" onchange="selectTargetDuckById(this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-amber-300 focus:outline-none focus:border-amber-400 flex-1 sm:max-w-[170px] truncate">
+                    <!-- Center: Target Duck Focus & Field of View -->
+                    <div class="flex items-center justify-between sm:justify-start gap-2 ios-dock px-3 py-1.5 w-full sm:w-auto shrink-0">
+                        <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider shrink-0 flex items-center gap-1">
+                            <span>🎯</span> <span>Target:</span>
+                        </span>
+                        <div class="flex items-center gap-1">
+                            <button onclick="cycleTargetDuck(-1)" class="btn-game bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded-lg text-xs font-bold transition" title="Previous Duck">◀</button>
+                            <select id="targetDuckSelect" onchange="selectTargetDuckById(this.value)" class="bg-slate-900 border border-white/10 rounded-lg px-2 py-1 text-xs font-bold text-amber-300 focus:outline-none focus:border-amber-400 max-w-[145px] sm:max-w-[170px] truncate cursor-pointer">
                                 <option value="auto_leader">👑 Auto: 1st Place</option>
                             </select>
-                            <button onclick="cycleTargetDuck(1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded-lg text-xs font-bold transition" title="Next Duck">▶</button>
+                            <button onclick="cycleTargetDuck(1)" class="btn-game bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded-lg text-xs font-bold transition" title="Next Duck">▶</button>
                         </div>
 
-                        <div class="h-4 w-[1px] bg-slate-800 mx-0.5 hidden md:block"></div>
+                        <div class="h-4 w-[1px] bg-white/10 mx-1 hidden md:block"></div>
 
-                        <!-- Manual Zoom Slider -->
-                        <div class="hidden md:flex items-center gap-1.5" title="Camera Zoom / Field of View">
-                            <span class="text-[11px] text-slate-400">🔍</span>
+                        <!-- Zoom Slider -->
+                        <div class="hidden md:flex items-center gap-1.5" title="Camera Field of View Zoom">
+                            <span class="text-xs text-slate-400">🔍</span>
                             <input type="range" id="camZoomSlider" min="0.55" max="1.85" step="0.05" value="1.0" oninput="setCameraZoom(this.value)" class="w-16 accent-amber-400 cursor-pointer">
                             <button onclick="resetCameraPanZoom()" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-1.5 py-0.5 rounded transition">1x</button>
                         </div>
                     </div>
 
-                    <!-- Right: Quick Race Actions -->
-                    <div class="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar">
-                        <button onclick="startHostIrlWaitingMode()" class="btn-game bg-fuchsia-600/25 hover:bg-fuchsia-600/40 text-fuchsia-300 border border-fuchsia-500/50 px-2 sm:px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-extrabold flex items-center gap-1 shrink-0 transition" title="Empty Track & Wait for IRL QR Code Participants">
-                            <span>📡</span> <span>IRL Wait</span>
+                    <!-- Right: Race Master Action Buttons -->
+                    <div class="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar justify-end">
+                        <button onclick="triggerManualChaos()" id="chaosBtn" class="btn-game bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md shrink-0 transition" title="Spawn Boosts & Whirlpools! (Spacebar)">
+                            <span>⚡</span> <span>Surge!</span>
                         </button>
-                        <button onclick="toggleBroadcastHUD()" id="hudToggleBtn" class="btn-game bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 px-2 sm:px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold shrink-0 transition" title="Toggle Broadcast Telemetry (Key: C)">
-                            📺 HUD
-                        </button>
-                        <button onclick="triggerManualChaos()" id="chaosBtn" class="btn-game bg-purple-600 hover:bg-purple-500 text-white px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-extrabold flex items-center gap-1 shadow-md shrink-0 transition" title="Spawn Boosts & Whirlpools! (Spacebar)">
-                            <span>⚡</span> <span>Quack Surge!</span>
-                        </button>
-                        <button onclick="startRace()" class="btn-game bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-black flex items-center gap-1 shrink-0 transition" title="Restart Race">
+                        <button onclick="startRace()" class="btn-game bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1 shrink-0 transition" title="Restart Race">
                             <span>🔄</span> <span>Restart</span>
                         </button>
-                        <button onclick="openWinnerModal()" class="btn-game bg-amber-500/20 hover:bg-amber-500/35 text-amber-300 border border-amber-500/40 px-2 sm:px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 shrink-0 transition" title="View & Export Race Results">
+                        <button onclick="openWinnerModal()" class="btn-game bg-amber-500/20 hover:bg-amber-500/35 text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 shrink-0 transition" title="View & Export Race Results">
                             <span>🏆</span> <span>Results</span>
                         </button>
-                        <button onclick="showSetupView()" class="btn-game bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2 sm:px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold shrink-0 transition">
+                        <button onclick="toggleBroadcastHUD()" id="hudToggleBtn" class="btn-game bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-white/10 px-2.5 py-1.5 rounded-xl text-xs font-bold shrink-0 transition" title="Toggle Broadcast Telemetry (Key: C)">
+                            📺 HUD
+                        </button>
+                        <button onclick="showSetupView()" class="btn-game bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 px-2.5 py-1.5 rounded-xl text-xs font-bold shrink-0 transition" title="Edit Ducks & Fleet">
                             ✏️ Roster
                         </button>
                     </div>
+
                 </div>
 
-                <!-- Row 2: Live Multi-Camera POV Bar (Integrated & Smooth) -->
-                <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar touch-pan-x">
-                    <div class="flex items-center gap-2 shrink-0">
-                        <!-- Auto-Director Toggle -->
-                        <button onclick="toggleAutoDirector()" id="autoDirectorBtn" class="btn-game bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 px-2.5 sm:px-3 py-1 rounded-xl text-[11px] sm:text-xs font-black flex items-center gap-1.5 shrink-0 transition" title="AI TV Broadcast Auto-Director (Key: A)">
-                            <span id="autoDirectorDot" class="w-2 h-2 rounded-full bg-rose-400"></span>
-                            <span>DIRECTOR: <span id="autoDirectorStatus">OFF</span></span>
+                <!-- Bottom Row: Multi-Angle TV Cameras Strip -->
+                <div class="pt-2 border-t border-white/10 flex items-center justify-between gap-3 overflow-x-auto no-scrollbar touch-pan-x">
+                    
+                    <!-- AI Director Master Switch -->
+                    <button onclick="toggleAutoDirector()" id="autoDirectorBtn" class="btn-game bg-rose-600/20 hover:bg-rose-600/35 text-rose-300 border border-rose-500/40 px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 shrink-0 transition" title="AI Broadcast Auto-Director (Key: A)">
+                        <span id="autoDirectorDot" class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
+                        <span>DIRECTOR: <span id="autoDirectorStatus">OFF</span></span>
+                    </button>
+
+                    <div class="h-4 w-[1px] bg-white/10 shrink-0"></div>
+
+                    <!-- Camera Angle Selector Buttons -->
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button onclick="setCameraMode('leader', true)" id="camBtn_leader" class="cam-btn cam-pill-active bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition" title="Key 1: Smooth Leader Pan">
+                            <span class="opacity-40 text-[10px]">1</span> 👑 Leader
                         </button>
-                        <div class="h-4 w-[1px] bg-slate-800"></div>
+                        <button onclick="setCameraMode('gopro', true)" id="camBtn_gopro" class="cam-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition" title="Key 2: Duck-Eye GoPro Mount">
+                            <span class="opacity-40 text-[10px]">2</span> 🥽 Duck-Eye
+                        </button>
+                        <button onclick="setCameraMode('drone3d', true)" id="camBtn_drone3d" class="cam-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition" title="Key 3: 3D Sky-Drone">
+                            <span class="opacity-40 text-[10px]">3</span> 🛸 Drone
+                        </button>
+                        <button onclick="setCameraMode('chase3d', true)" id="camBtn_chase3d" class="cam-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition" title="Key 4: 3D Kart Chase">
+                            <span class="opacity-40 text-[10px]">4</span> 🏎️ Chase
+                        </button>
+                        <button onclick="setCameraMode('heli', true)" id="camBtn_heli" class="cam-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition" title="Key 5: Helicopter Orbit">
+                            <span class="opacity-40 text-[10px]">5</span> 🚁 Heli
+                        </button>
+                        <button onclick="setCameraMode('underdog', true)" id="camBtn_underdog" class="cam-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition" title="Key 6: Underdog Cam">
+                            <span class="opacity-40 text-[10px]">6</span> 🔥 Underdog
+                        </button>
+                        <button onclick="setCameraMode('brawl', true)" id="camBtn_brawl" class="cam-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition" title="Key 7: Mid-Pack Brawl">
+                            <span class="opacity-40 text-[10px]">7</span> 💥 Brawl
+                        </button>
+                        <button onclick="setCameraMode('finish', true)" id="camBtn_finish" class="cam-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition" title="Key 8: Finish Line Tripod">
+                            <span class="opacity-40 text-[10px]">8</span> 📸 Finish
+                        </button>
+                        <button onclick="setCameraMode('split', true)" id="camBtn_split" class="cam-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition" title="Key 9: Triple Split-Screen">
+                            <span class="opacity-40 text-[10px]">9</span> 🎛️ Split
+                        </button>
+                        <button onclick="setCameraMode('blimp', true)" id="camBtn_blimp" class="cam-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition" title="Key 0: Blimp Map">
+                            <span class="opacity-40 text-[10px]">0</span> 🎈 Map
+                        </button>
                     </div>
 
-                    <!-- 10 POV Mode Buttons -->
-                    <div class="flex items-center gap-1.5 shrink-0">
-                        <button onclick="setCameraMode('leader', true)" id="camBtn_leader" class="cam-btn cam-pill-active bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 transition" title="Key 1: Smooth Leader Pan">
-                            <span class="opacity-50 text-[10px] hidden sm:inline">1</span> 👑 Leader
-                        </button>
-                        <button onclick="setCameraMode('gopro', true)" id="camBtn_gopro" class="cam-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 transition" title="Key 2: Duck-Eye GoPro Mount">
-                            <span class="opacity-50 text-[10px] hidden sm:inline">2</span> 🥽 Duck-Eye
-                        </button>
-                        <button onclick="setCameraMode('drone3d', true)" id="camBtn_drone3d" class="cam-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 transition" title="Key 3: 3D Sky-Drone">
-                            <span class="opacity-50 text-[10px] hidden sm:inline">3</span> 🛸 Drone
-                        </button>
-                        <button onclick="setCameraMode('chase3d', true)" id="camBtn_chase3d" class="cam-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 transition" title="Key 4: 3D Kart Chase">
-                            <span class="opacity-50 text-[10px] hidden sm:inline">4</span> 🏎️ Chase
-                        </button>
-                        <button onclick="setCameraMode('heli', true)" id="camBtn_heli" class="cam-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 transition" title="Key 5: Helicopter Orbit">
-                            <span class="opacity-50 text-[10px] hidden sm:inline">5</span> 🚁 Heli
-                        </button>
-                        <button onclick="setCameraMode('underdog', true)" id="camBtn_underdog" class="cam-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 transition" title="Key 6: Underdog Cam">
-                            <span class="opacity-50 text-[10px] hidden sm:inline">6</span> 🔥 Underdog
-                        </button>
-                        <button onclick="setCameraMode('brawl', true)" id="camBtn_brawl" class="cam-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 transition" title="Key 7: Mid-Pack Brawl">
-                            <span class="opacity-50 text-[10px] hidden sm:inline">7</span> 💥 Brawl
-                        </button>
-                        <button onclick="setCameraMode('finish', true)" id="camBtn_finish" class="cam-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 transition" title="Key 8: Finish Line Tripod">
-                            <span class="opacity-50 text-[10px] hidden sm:inline">8</span> 📸 Finish
-                        </button>
-                        <button onclick="setCameraMode('split', true)" id="camBtn_split" class="cam-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 transition" title="Key 9: Triple Split-Screen">
-                            <span class="opacity-50 text-[10px] hidden sm:inline">9</span> 🎛️ Split
-                        </button>
-                        <button onclick="setCameraMode('blimp', true)" id="camBtn_blimp" class="cam-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 transition" title="Key 0: Blimp Map">
-                            <span class="opacity-50 text-[10px] hidden sm:inline">0</span> 🎈 Map
-                        </button>
-                    </div>
                 </div>
 
             </div>
