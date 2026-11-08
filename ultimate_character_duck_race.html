@@ -277,7 +277,7 @@
                 </button>
 
                 <!-- Stage QR Join Modal Button -->
-                <button id="stageQrLobbyBtn" onclick="openStageLobbyModal()" class="btn-game bg-slate-800 hover:bg-slate-700 text-fuchsia-300 border border-fuchsia-500/40 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 transition" title="Open Full Stage QR Lobby Settings">
+                <button id="stageQrLobbyBtn" class="hidden sm:flex  onclick="openStageLobbyModal()" class="btn-game bg-slate-800 hover:bg-slate-700 text-fuchsia-300 border border-fuchsia-500/40 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 transition" title="Open Full Stage QR Lobby Settings">
                     <span>📱</span>
                     <span class="hidden xl:inline">QR Lobby</span>
                 </button>
@@ -330,7 +330,7 @@
     </header>
 
 <!-- MAIN CONTENT CONTAINER -->
-<main class="flex-1 flex flex-col max-w-7xl w-full mx-auto px-2 sm:px-6 py-2.5 sm:py-4 gap-3 sm:gap-4">
+<main class="flex-1 flex flex-col max-w-7xl w-full mx-auto px-2 sm:px-6 py-2.5 sm:py-4 pb-20 md:pb-4 gap-3 sm:gap-4">
 
     <!-- ========================================================== -->
     <!-- SECTION 1: CHARACTER DUCK ROSTER & CUSTOMIZATION STUDIO    -->
@@ -634,7 +634,7 @@ Emily
                 </div>
 
                 <!-- Row 2: Live Multi-Camera POV Bar (Integrated & Smooth) -->
-                <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+                <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar touch-pan-x">
                     <div class="flex items-center gap-2 shrink-0">
                         <!-- Auto-Director Toggle -->
                         <button onclick="toggleAutoDirector()" id="autoDirectorBtn" class="btn-game bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 px-2.5 sm:px-3 py-1 rounded-xl text-[11px] sm:text-xs font-black flex items-center gap-1.5 shrink-0 transition" title="AI TV Broadcast Auto-Director (Key: A)">
@@ -862,6 +862,31 @@ Emily
             </div>
         </footer>
     </main>
+
+    <!-- Mobile Bottom Floating Navigation Bar (Only visible on small screens) -->
+    <nav class="md:hidden fixed bottom-3 inset-x-3 z-40 ios-glass rounded-2xl p-1.5 flex items-center justify-around shadow-2xl border border-white/15">
+        <button onclick="showSetupView()" id="mobileNav_roster" class="flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 rounded-xl text-slate-300 hover:text-white transition">
+            <span class="text-base">✏️</span>
+            <span class="text-[10px] font-bold">Roster</span>
+        </button>
+        <button onclick="toggleSetupRaceView()" id="mobileNav_track" class="flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 rounded-xl text-amber-300 font-bold transition">
+            <span class="text-base">🏁</span>
+            <span class="text-[10px] font-bold">Track</span>
+        </button>
+        <button onclick="startRaceFromAnywhere()" class="flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 rounded-xl bg-amber-400 text-slate-950 font-black shadow-md transition active:scale-95">
+            <span class="text-base">🚀</span>
+            <span class="text-[10px] font-black uppercase">Race!</span>
+        </button>
+        <button onclick="openHowToPlayModal(0)" class="flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 rounded-xl text-slate-300 hover:text-white transition">
+            <span class="text-base">📖</span>
+            <span class="text-[10px] font-bold">Guide</span>
+        </button>
+        <button onclick="openTipModal()" class="flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 rounded-xl text-amber-300 hover:text-amber-200 transition">
+            <span class="text-base">☕</span>
+            <span class="text-[10px] font-bold">Tip</span>
+        </button>
+    </nav>
+
 
     <!-- ========================================================== -->
     <!-- LEGAL COMPLIANCE MODAL (COPPA, GDPR, DMCA, ARL, CAN-SPAM)  -->
