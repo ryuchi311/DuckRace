@@ -29,97 +29,203 @@
     <link rel="apple-touch-icon" href="favicon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Apple iOS Futuristic Design System Fonts & Styles -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=SF+Pro+Display:wght@500;600;700;800;900&family=JetBrains+Mono:wght@600;700;800&family=Fredoka:wght@600;700;800&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --font-display: 'Fredoka', sans-serif;
-            --font-sans: 'Inter', sans-serif;
+            --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Plus Jakarta Sans', system-ui, sans-serif;
+            --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Plus Jakarta Sans', system-ui, sans-serif;
+            --font-mono: 'SF Mono', 'JetBrains Mono', ui-monospace, Menlo, Monaco, monospace;
+            --ios-glass: rgba(15, 23, 42, 0.72);
+            --ios-glass-card: rgba(18, 26, 47, 0.65);
+            --ios-glass-border: rgba(255, 255, 255, 0.12);
+            --ios-glass-highlight: rgba(255, 255, 255, 0.22);
         }
+
+        /* Futuristic iOS Space Dark Aurora Background */
         body {
             font-family: var(--font-sans);
-            background-color: #0b1120;
+            background: radial-gradient(135% 100% at 50% 0%, #172554 0%, #090e1a 45%, #030712 100%);
+            background-attachment: fixed;
             color: #f8fafc;
             overflow-x: hidden;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
+            letter-spacing: -0.015em;
         }
+
+        /* Ambient Dynamic iOS Light Orbs */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -20vh;
+            left: 10vw;
+            width: 80vw;
+            height: 50vh;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.14) 0%, rgba(168, 85, 247, 0.08) 50%, transparent 75%);
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -15vh;
+            right: 5vw;
+            width: 70vw;
+            height: 45vh;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, rgba(236, 72, 153, 0.08) 50%, transparent 75%);
+            filter: blur(90px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
         .font-display {
             font-family: var(--font-display);
+            letter-spacing: -0.03em;
         }
-        /* Hide scrollbar utility for horizontal camera strips */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
+
+        /* Apple iOS Ultra-Glass Panels with Specular Micro-Borders */
+        .ios-glass {
+            background: var(--ios-glass);
+            backdrop-filter: blur(28px) saturate(190%);
+            -webkit-backdrop-filter: blur(28px) saturate(190%);
+            border: 1px solid var(--ios-glass-border);
+            box-shadow: 
+                0 16px 40px -8px rgba(0, 0, 0, 0.55),
+                0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+                0 1px 0 0 rgba(255, 255, 255, 0.22) inset;
         }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+
+        .ios-card {
+            background: var(--ios-glass-card);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid var(--ios-glass-border);
+            border-radius: 1.5rem;
+            box-shadow: 
+                0 10px 30px -6px rgba(0, 0, 0, 0.4),
+                0 1px 0 0 rgba(255, 255, 255, 0.18) inset;
+            transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        /* Custom Scrollbar */
+        .ios-card:hover {
+            border-color: rgba(255, 255, 255, 0.24);
+            box-shadow: 
+                0 18px 46px -8px rgba(0, 0, 0, 0.58),
+                0 1px 0 0 rgba(255, 255, 255, 0.35) inset;
+        }
+
+        /* Apple iOS Squircle Buttons with Haptic Spring & Specular Highlight */
+        .btn-game, .ios-btn {
+            border-radius: 1rem;
+            font-weight: 700;
+            letter-spacing: -0.015em;
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.45);
+        }
+        .btn-game::after, .ios-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 40%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 100%);
+            border-top-left-radius: inherit;
+            border-top-right-radius: inherit;
+            pointer-events: none;
+        }
+        .btn-game:hover, .ios-btn:hover {
+            transform: translateY(-1.5px) scale(1.02);
+            filter: brightness(1.08);
+            box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.55);
+        }
+        .btn-game:active, .ios-btn:active {
+            transform: translateY(1px) scale(0.965);
+            filter: brightness(0.95);
+            box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.4);
+        }
+
+        /* iOS Camera Pill Switcher Style */
+        .cam-pill-active {
+            background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%) !important;
+            color: #ffffff !important;
+            border-color: rgba(255, 255, 255, 0.4) !important;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.55), 0 1px 0 rgba(255, 255, 255, 0.5) inset !important;
+            transform: scale(1.05);
+        }
+
+        /* Dynamic Island Indicator Style */
+        .ios-dynamic-island {
+            background: rgba(3, 7, 18, 0.88);
+            backdrop-filter: blur(32px);
+            -webkit-backdrop-filter: blur(32px);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 9999px;
+            box-shadow: 0 10px 32px -4px rgba(0, 0, 0, 0.65), 0 1px 0 rgba(255, 255, 255, 0.2) inset;
+        }
+
+        /* Hide scrollbars elegantly */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* iOS Smooth Minimal Scrollbar */
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #0f172a;
-            border-radius: 8px;
+            background: transparent;
         }
         ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.18);
+            border-radius: 9999px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
+            background: rgba(255, 255, 255, 0.32);
         }
-        /* Game Buttons */
-        .btn-game {
-            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 0 rgba(0,0,0,0.4);
-        }
-        .btn-game:active {
-            transform: translateY(3px);
-            box-shadow: 0 1px 0 rgba(0,0,0,0.4);
-        }
-        /* Floating Animation */
+
         @keyframes bob {
             0%, 100% { transform: translateY(0px) rotate(-1deg); }
             50% { transform: translateY(-5px) rotate(2deg); }
         }
         .animate-bob {
-            animation: bob 2.4s ease-in-out infinite;
+            animation: bob 2.6s ease-in-out infinite;
         }
         @keyframes pulse-glow {
-            0%, 100% { filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.7)); }
-            50% { filter: drop-shadow(0 0 18px rgba(250, 204, 21, 1)); }
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.75)); }
+            50% { filter: drop-shadow(0 0 22px rgba(250, 204, 21, 1)); }
         }
         .podium-glow {
             animation: pulse-glow 2s infinite;
         }
-        /* Broadcast Switcher Flash */
         @keyframes tv-flash {
-            0% { opacity: 0.75; }
+            0% { opacity: 0.8; }
             100% { opacity: 0; }
         }
         .animate-tv-cut {
             animation: tv-flash 0.28s ease-out forwards;
         }
-        .cam-pill-active {
-            background: linear-gradient(135deg, #f59e0b, #ea580c) !important;
-            color: #09090b !important;
-            border-color: #fde047 !important;
-            box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
-        }
     </style>
+
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script src="engine.js"></script>
 </head>
-<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+<body class="min-h-screen flex flex-col text-slate-100 relative antialiased selection:bg-cyan-500 selection:text-slate-950">
 
     <!-- TOP NAVIGATION / HEADER BAR -->
-    <header class="bg-slate-900/95 backdrop-blur-md border-b border-slate-800/80 px-2.5 sm:px-4 py-2 sm:py-2.5 sticky top-0 z-30 shadow-md">
+    <header class="ios-glass border-b border-white/10 px-3 sm:px-6 py-2.5 sm:py-3 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 sm:gap-4">
             <!-- Brand Title -->
             <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-400 via-yellow-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20 border border-amber-300/40">
+                <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-[22px] bg-gradient-to-br from-amber-400 via-yellow-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30 border border-white/30 shrink-0 transform hover:scale-105 transition-transform">
                     <span class="text-lg sm:text-2xl">🦆</span>
                 </div>
                 <div>
@@ -133,7 +239,7 @@
             <!-- Header Quick Actions -->
             <div class="flex items-center gap-1.5 sm:gap-2.5 flex-wrap justify-end">
                 <!-- Active Duck Counter Badge -->
-                <div class="bg-slate-950/80 border border-slate-800 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs">
+                <div class="ios-dynamic-island px-3 sm:px-3.5 py-1 sm:py-1.5 flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs shrink-0">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span class="text-slate-400 font-semibold hidden md:inline">Racers:</span>
                     <span id="activeCountBadge" class="font-mono font-extrabold text-amber-400">100 RACERS</span>
@@ -273,7 +379,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4">
             
             <!-- Left: Race Settings Card (4 cols) -->
-            <div class="lg:col-span-4 bg-slate-900/95 border border-slate-800 rounded-2xl p-3 sm:p-4 flex flex-col justify-between gap-3 sm:gap-4 shadow-xl">
+            <div class="lg:col-span-4 ios-card p-4 sm:p-5 flex flex-col justify-between gap-3 sm:gap-4 shadow-xl">
                 <div>
                     <h2 class="font-display text-sm sm:text-base font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2 mb-2.5 sm:mb-3">
                         <span>⚙️</span> Race Duration & Track Settings
@@ -397,7 +503,7 @@ Emily
         </div>
 
         <!-- Roster Search & Filter Bar -->
-        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2.5 flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 shadow-md">
+        <div class="ios-card p-3 flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 shadow-md">
             <div class="flex items-center gap-2 flex-1 min-w-[200px]">
                 <span class="text-sm">🔍</span>
                 <input id="rosterSearchInput" type="text" oninput="filterRosterGrid(this.value)" placeholder="Search racers by name or character archetype..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-100 focus:outline-none focus:border-cyan-400" />
@@ -423,7 +529,7 @@ Emily
     <section id="raceSection" class="hidden flex-col gap-2 sm:gap-2.5 flex-1">
             
             <!-- Sleek Broadcast HUD Master Bar -->
-            <div class="bg-slate-900/95 border border-slate-800 rounded-2xl p-2 sm:p-3 shadow-xl flex flex-col gap-2 sm:gap-2.5">
+            <div class="ios-card p-2.5 sm:p-3.5 shadow-xl flex flex-col gap-2 sm:gap-2.5">
                 
                 <!-- Row 1: Telemetry, Target Selector, Controls & Action Buttons -->
                 <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
@@ -553,7 +659,7 @@ Emily
             </div>
 
             <!-- Main Canvas Container with Floating Overlays -->
-            <div class="relative w-full h-[64vh] min-h-[380px] sm:h-[620px] bg-slate-950 rounded-2xl overflow-hidden border-2 border-slate-800 shadow-2xl select-none touch-none">
+            <div class="relative w-full h-[64vh] min-h-[380px] sm:h-[620px] bg-slate-950/90 rounded-[28px] overflow-hidden border border-white/15 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.85)] select-none touch-none ring-1 ring-white/10">
                 
                 <!-- 60FPS Race Canvas -->
                 <canvas id="raceCanvas" class="w-full h-full block cursor-grab active:cursor-grabbing touch-none" title="Tap/Click any duck to cheer & lock camera! Drag to pan, pinch/scroll to zoom."></canvas>
@@ -1072,7 +1178,7 @@ Emily
         <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
 
         <!-- Modal Dialog -->
-        <div class="relative z-10 w-full max-w-4xl bg-slate-900 border-2 border-amber-400/50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh]">
+        <div class="relative z-10 w-full max-w-4xl ios-glass rounded-[32px] border border-amber-400/60 shadow-[0_32px_80px_rgba(0,0,0,0.9)] overflow-hidden my-auto flex flex-col max-h-[92vh]">
             
             <!-- Modal Header -->
             <div class="bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-orange-500/20 border-b border-slate-800 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">

@@ -478,8 +478,8 @@
         grid.innerHTML = window.rosterState.map((duck, idx) => {
             const aura = duck.auraColor || '#f59e0b';
             return `
-                <div class="relative group bg-slate-900/95 border-2 ${duck.enabled ? 'border-slate-800 hover:border-amber-400/80 shadow-lg' : 'border-slate-900 opacity-45'} rounded-2xl p-3.5 flex flex-col justify-between transition-all duration-200 hover:-translate-y-0.5"
-                     style="${duck.enabled ? `box-shadow: 0 4px 20px -4px ${aura}22;` : ''}">
+                <div class="relative group ios-card ${duck.enabled ? 'hover:border-white/30 shadow-xl' : 'opacity-40 grayscale'} p-3.5 flex flex-col justify-between transition-all duration-200 hover:-translate-y-1"
+                     style="${duck.enabled ? `box-shadow: 0 12px 30px -8px ${aura}35, 0 1px 0 rgba(255,255,255,0.2) inset;` : ''}">
                     
                     <!-- Top Header Row -->
                     <div class="flex items-center justify-between gap-2">
