@@ -2478,6 +2478,39 @@
         setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
 
+    window.getClientEnvironmentInfo = function () {
+        const ua = navigator.userAgent || '';
+        let browser = 'Unknown Browser';
+        if (/Edg\/([\d.]+)/.test(ua)) browser = `Edge ${RegExp.$1}`;
+        else if (/OPR\/([\d.]+)/.test(ua)) browser = `Opera ${RegExp.$1}`;
+        else if (/Chrome\/([\d.]+)/.test(ua)) browser = `Chrome ${RegExp.$1}`;
+        else if (/Firefox\/([\d.]+)/.test(ua)) browser = `Firefox ${RegExp.$1}`;
+        else if (/Safari\/([\d.]+)/.test(ua) && !/Chrome/.test(ua)) browser = 'Safari';
+
+        let os = 'Unknown OS';
+        if (/Windows NT 10\.0/.test(ua)) os = 'Windows 10/11';
+        else if (/Windows NT/.test(ua)) os = 'Windows';
+        else if (/Android ([\d.]+)/.test(ua)) os = `Android ${RegExp.$1}`;
+        else if (/iPhone|iPad|iPod/.test(ua)) os = 'iOS';
+        else if (/Mac OS X/.test(ua)) os = 'macOS';
+        else if (/Linux/.test(ua)) os = 'Linux';
+
+        let deviceName = 'Desktop';
+        if (/iPhone/.test(ua)) deviceName = 'iPhone';
+        else if (/iPad/.test(ua)) deviceName = 'iPad';
+        else if (/Android/.test(ua)) deviceName = /Mobile/.test(ua) ? 'Android Phone' : 'Android Tablet';
+        else if (/Macintosh/.test(ua)) deviceName = 'Mac';
+        else if (/Windows/.test(ua)) deviceName = 'Windows PC';
+        else if (/Linux/.test(ua)) deviceName = 'Linux PC';
+
+        return {
+            ip: window.detectedClientIp || window.detectedLanOrigin || 'Local',
+            deviceName,
+            browser,
+            os
+        };
+    };
+
     window.exportRaceResults = function (format = 'csv') {
         const list = getCurrentResultStandings();
         if (!list.length) {
@@ -2490,12 +2523,20 @@
         const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
         const mapName = currentTheme?.name || 'River Rapids';
         const diffMode = (currentDifficulty?.key || 'normal').toUpperCase();
+        const hostEnv = window.getClientEnvironmentInfo();
+        const getRacerEnv = (r) => ({
+            ip: r.clientIp || r.duckData?.clientIp || hostEnv.ip,
+            deviceName: r.deviceName || r.duckData?.deviceName || hostEnv.deviceName,
+            browser: r.browser || r.duckData?.browser || hostEnv.browser,
+            os: r.os || r.duckData?.os || hostEnv.os
+        });
 
         if (format === 'json') {
             const exportPayload = {
                 game: 'Ultimate Duck Race',
                 edition: 'Championship Broadcast Edition',
                 exportedAt: now.toISOString(),
+                hostEnvironment: hostEnv,
                 raceDurationSeconds: window.raceConfig?.durationSeconds || 20,
                 mapTheme: currentThemeKey,
                 mapName: mapName,
@@ -2506,7 +2547,8 @@
                     archetype: list[0].title,
                     finishTime: list[0].finishTime || null,
                     battleCry: list[0].battleCry || null,
-                    notes: list[0].notes || list[0].duckData?.notes || ''
+                    notes: list[0].notes || list[0].duckData?.notes || '',
+                    ...getRacerEnv(list[0])
                 } : null,
                 standings: list.map((r, idx) => ({
                     rank: idx + 1,
@@ -2519,7 +2561,8 @@
                     progressPercent: r.finished ? 100 : Math.min(100, Math.max(0, Math.round((r.progress || 0) * 100))),
                     finished: !!r.finished,
                     battleCry: r.battleCry || '',
-                    notes: r.notes || r.duckData?.notes || ''
+                    notes: r.notes || r.duckData?.notes || '',
+                    ...getRacerEnv(r)
                 }))
             };
             const jsonStr = JSON.stringify(exportPayload, null, 2);
@@ -2528,12 +2571,13 @@
             setCommentary(`💾 Exported complete race data to JSON (duck-race-results_${stamp}.json)!`);
         } else if (format === 'csv') {
             const escapeCsv = (val) => `"${String(val ?? '').replace(/"/g, '""')}"`;
-            const headers = ['Rank', 'Medal', 'Participant Name', 'Character Title', 'Finish Time (s)', 'Progress (%)', 'Map', 'Difficulty', 'Battle Cry', 'Notes / Contact'];
+            const headers = ['Rank', 'Medal', 'Participant Name', 'Character Title', 'Finish Time (s)', 'Progress (%)', 'Map', 'Difficulty', 'Battle Cry', 'Notes / Contact', 'IP', 'Device Name', 'Browser', 'OS'];
             const rows = list.map((r, idx) => {
                 const rank = idx + 1;
                 const medal = idx === 0 ? '1st (Gold)' : idx === 1 ? '2nd (Silver)' : idx === 2 ? '3rd (Bronze)' : `#${rank}`;
                 const timeStr = r.finishTime ? r.finishTime.toFixed(2) : (window.raceElapsed ? window.raceElapsed.toFixed(2) : '0.00');
                 const progStr = r.finished ? '100' : Math.min(100, Math.max(0, Math.round((r.progress || 0) * 100)));
+                const env = getRacerEnv(r);
                 return [
                     rank,
                     escapeCsv(medal),
@@ -2544,7 +2588,11 @@
                     escapeCsv(mapName),
                     escapeCsv(diffMode),
                     escapeCsv(r.battleCry || ''),
-                    escapeCsv(r.notes || r.duckData?.notes || '')
+                    escapeCsv(r.notes || r.duckData?.notes || ''),
+                    escapeCsv(env.ip),
+                    escapeCsv(env.deviceName),
+                    escapeCsv(env.browser),
+                    escapeCsv(env.os)
                 ].join(',');
             });
             const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');

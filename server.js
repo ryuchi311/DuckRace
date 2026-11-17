@@ -238,6 +238,9 @@ const server = http.createServer(async (req, res) => {
         battleCry: String(body.battleCry || 'QUACK!').slice(0, 50),
         notes: String(body.notes || '').slice(0, 80),
         clientIp,
+        deviceName: String(body.deviceName || '').slice(0, 40),
+        browser: String(body.browser || '').slice(0, 40),
+        os: String(body.os || '').slice(0, 40),
         joinedAt: Number(body.joinedAt) || Date.now(),
         lastBoostAt: Number(body.lastBoostAt) || 0
       };

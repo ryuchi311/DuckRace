@@ -3418,6 +3418,10 @@ Emily
             targetDuck.customName = p.playerName;
             targetDuck.battleCry = p.battleCry || targetDuck.battleCry;
             targetDuck.notes = p.notes || targetDuck.notes || '';
+            targetDuck.clientIp = p.clientIp || targetDuck.clientIp || '';
+            targetDuck.deviceName = p.deviceName || targetDuck.deviceName || '';
+            targetDuck.browser = p.browser || targetDuck.browser || '';
+            targetDuck.os = p.os || targetDuck.os || '';
             targetDuck.enabled = true;
             targetDuck.isStageParticipant = true;
 
@@ -3942,6 +3946,7 @@ Emily
 
             const finalName = nameVal || `${arch.defaultName}`;
 
+            const envInfo = typeof window.getClientEnvironmentInfo === 'function' ? window.getClientEnvironmentInfo() : {};
             currentMobileParticipant = {
                 participantId: currentMobileParticipant?.participantId || ('mob_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)),
                 roomPin: pinVal,
@@ -3949,6 +3954,9 @@ Emily
                 duckId: arch.id,
                 battleCry: cryVal,
                 notes: notesVal,
+                deviceName: envInfo.deviceName || '',
+                browser: envInfo.browser || '',
+                os: envInfo.os || '',
                 joinedAt: Date.now(),
                 lastBoostAt: 0
             };

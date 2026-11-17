@@ -42,6 +42,11 @@ export default {
             player_name TEXT NOT NULL,
             duck_id TEXT NOT NULL,
             battle_cry TEXT,
+            notes TEXT,
+            client_ip TEXT,
+            device_name TEXT,
+            browser TEXT,
+            os TEXT,
             joined_at INTEGER,
             last_boost_at INTEGER,
             PRIMARY KEY (room_pin, participant_id)
@@ -54,6 +59,11 @@ export default {
           env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_participants_joined ON participants(joined_at)`),
           env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_viewers_seen ON viewers(last_seen)`)
         ]);
+        // Ensure newer columns exist on existing D1 tables
+        const alterCols = ['notes TEXT', 'client_ip TEXT', 'device_name TEXT', 'browser TEXT', 'os TEXT'];
+        for (const colDef of alterCols) {
+          try { await env.DB.prepare(`ALTER TABLE participants ADD COLUMN ${colDef}`).run(); } catch (e) {}
+        }
         await cleanupOldData();
       } catch (e) {}
     };
@@ -94,7 +104,9 @@ export default {
 
           const { results } = await env.DB.prepare(
             `SELECT participant_id as participantId, room_pin as roomPin, player_name as playerName,
-                    duck_id as duckId, battle_cry as battleCry, joined_at as joinedAt, last_boost_at as lastBoostAt
+                    duck_id as duckId, battle_cry as battleCry, notes,
+                    client_ip as clientIp, device_name as deviceName, browser, os,
+                    joined_at as joinedAt, last_boost_at as lastBoostAt
              FROM participants
              WHERE room_pin = ?
              ORDER BY joined_at ASC`
@@ -134,6 +146,8 @@ export default {
         const body = await request.json();
         const pin = String(body.roomPin || 'DUCK').trim().toUpperCase();
         let participants = [];
+        const rawIp = request.headers.get('cf-connecting-ip') || (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || '';
+        const clientIp = rawIp.replace(/^::ffff:/, '');
 
         if (body.participantId) {
           const now = Date.now();
@@ -143,6 +157,11 @@ export default {
             playerName: String(body.playerName || 'Stage Duck').slice(0, 40),
             duckId: String(body.duckId || 'priest'),
             battleCry: String(body.battleCry || 'QUACK!').slice(0, 50),
+            notes: String(body.notes || '').slice(0, 80),
+            clientIp,
+            deviceName: String(body.deviceName || '').slice(0, 40),
+            browser: String(body.browser || '').slice(0, 40),
+            os: String(body.os || '').slice(0, 40),
             joinedAt: Number(body.joinedAt) || now,
             lastBoostAt: Number(body.lastBoostAt) || 0
           };
@@ -150,13 +169,34 @@ export default {
           // 2A. Cloudflare D1 Database Write
           if (env && env.DB) {
             await initD1();
+            if (clientIp) {
+              const dupCheck = await env.DB.prepare(
+                `SELECT participant_id FROM participants WHERE room_pin = ? AND client_ip = ? AND participant_id != ? LIMIT 1`
+              ).bind(pin, clientIp, record.participantId).first();
+              if (dupCheck) {
+                return new Response(JSON.stringify({
+                  ok: false,
+                  error: 'DUPLICATE_DEVICE',
+                  message: 'This device has already joined this room. Multi-browser joining is not allowed.'
+                }), { status: 409, headers: corsHeaders });
+              }
+            }
+
             await env.DB.prepare(`
-              INSERT INTO participants (room_pin, participant_id, player_name, duck_id, battle_cry, joined_at, last_boost_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?)
+              INSERT INTO participants (
+                room_pin, participant_id, player_name, duck_id, battle_cry,
+                notes, client_ip, device_name, browser, os, joined_at, last_boost_at
+              )
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
               ON CONFLICT(room_pin, participant_id) DO UPDATE SET
                 player_name = excluded.player_name,
                 duck_id = excluded.duck_id,
                 battle_cry = excluded.battle_cry,
+                notes = excluded.notes,
+                client_ip = excluded.client_ip,
+                device_name = excluded.device_name,
+                browser = excluded.browser,
+                os = excluded.os,
                 last_boost_at = excluded.last_boost_at
             `).bind(
               record.roomPin,
@@ -164,13 +204,20 @@ export default {
               record.playerName,
               record.duckId,
               record.battleCry,
+              record.notes,
+              record.clientIp,
+              record.deviceName,
+              record.browser,
+              record.os,
               record.joinedAt,
               record.lastBoostAt
             ).run();
 
             const { results } = await env.DB.prepare(
               `SELECT participant_id as participantId, room_pin as roomPin, player_name as playerName,
-                      duck_id as duckId, battle_cry as battleCry, joined_at as joinedAt, last_boost_at as lastBoostAt
+                      duck_id as duckId, battle_cry as battleCry, notes,
+                      client_ip as clientIp, device_name as deviceName, browser, os,
+                      joined_at as joinedAt, last_boost_at as lastBoostAt
                FROM participants
                WHERE room_pin = ?
                ORDER BY joined_at ASC`

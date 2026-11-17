@@ -10,6 +10,11 @@ CREATE TABLE IF NOT EXISTS participants (
   player_name TEXT NOT NULL,
   duck_id TEXT NOT NULL,
   battle_cry TEXT,
+  notes TEXT,
+  client_ip TEXT,
+  device_name TEXT,
+  browser TEXT,
+  os TEXT,
   joined_at INTEGER,
   last_boost_at INTEGER,
   PRIMARY KEY (room_pin, participant_id)
@@ -23,4 +28,3 @@ CREATE TABLE IF NOT EXISTS viewers (
 CREATE INDEX IF NOT EXISTS idx_participants_room ON participants(room_pin);
 CREATE INDEX IF NOT EXISTS idx_participants_joined ON participants(joined_at);
 CREATE INDEX IF NOT EXISTS idx_viewers_seen ON viewers(last_seen);
-
