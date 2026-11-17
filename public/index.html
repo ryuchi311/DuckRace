@@ -325,6 +325,9 @@
                         <button onclick="openTipModal()" class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-amber-300 hover:bg-white/10 flex items-center gap-2 transition">
                             <span>☕</span> Creator Tip Jar
                         </button>
+                        <a href="https://wheel.chiprojects.com/" target="_blank" rel="noopener noreferrer" class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-cyan-300 hover:bg-white/10 flex items-center gap-2 transition">
+                            <span>🎡</span> Game of Wheel ↗
+                        </a>
                         <div class="h-[1px] bg-white/10 my-0.5"></div>
                         <button onclick="openLegalModal('privacy')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:bg-white/10 flex items-center gap-2 transition">
                             <span>⚖️</span> Legal & Privacy
@@ -885,6 +888,43 @@ Emily
             </div>
         </section>
 
+        
+        <!-- Sister Game Cross-Promotion: Game of Wheel -->
+        <div class="ios-card p-3.5 sm:p-4 border border-cyan-400/25 bg-gradient-to-r from-indigo-950/60 via-slate-900/80 to-cyan-950/50 flex flex-col sm:flex-row items-center justify-between gap-3.5 shadow-lg">
+            <div class="flex items-center gap-3.5 min-w-0">
+                <!-- Animated Mini Spinning Wheel SVG -->
+                <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-slate-950/90 border border-white/15 flex items-center justify-center shrink-0 shadow-inner overflow-hidden group">
+                    <svg viewBox="0 0 64 64" class="w-10 h-10 sm:w-11 sm:h-11 animate-[spin_9s_linear_infinite] group-hover:animate-[spin_1.5s_linear_infinite]">
+                        <circle cx="32" cy="32" r="28" fill="#0f172a" stroke="#f8fafc" stroke-width="2"/>
+                        <path d="M32 32 L32 4 A28 28 0 0 1 56.2 18 Z" fill="#f43f5e"/>
+                        <path d="M32 32 L56.2 18 A28 28 0 0 1 56.2 46 Z" fill="#f59e0b"/>
+                        <path d="M32 32 L56.2 46 A28 28 0 0 1 32 60 Z" fill="#10b981"/>
+                        <path d="M32 32 L32 60 A28 28 0 0 1 7.8 46 Z" fill="#06b6d4"/>
+                        <path d="M32 32 L7.8 46 A28 28 0 0 1 7.8 18 Z" fill="#8b5cf6"/>
+                        <path d="M32 32 L7.8 18 A28 28 0 0 1 32 4 Z" fill="#ec4899"/>
+                        <circle cx="32" cy="32" r="6" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-400/15 text-cyan-300 border border-cyan-400/30">
+                            🎡 Sister Game • Free
+                        </span>
+                        <span class="text-[10px] font-bold text-amber-300 hidden sm:inline">🔊 With Sound Effects</span>
+                    </div>
+                    <h3 class="font-display text-sm sm:text-base font-black text-white tracking-tight mt-0.5 truncate">
+                        Game of Wheel — Random Name Picker for Streamers
+                    </h3>
+                    <p class="text-[11px] sm:text-xs text-slate-300 truncate">
+                        Need a fast giveaway wheel, stream decision maker, or classroom spinner? Try it free!
+                    </p>
+                </div>
+            </div>
+            <a href="https://wheel.chiprojects.com/" target="_blank" rel="noopener noreferrer" class="btn-game w-full sm:w-auto bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-display font-black px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 shrink-0 transition border-b-2 border-cyan-600">
+                <span>🎯</span> <span>Spin Now</span> <span class="text-xs">↗</span>
+            </a>
+        </div>
+
         <!-- App Footer with Legal Compliance Links -->
         <footer class="mt-4 pt-3 border-t border-slate-850 text-slate-400 text-xs flex flex-wrap items-center justify-between gap-3 px-2">
             <div class="flex items-center gap-2">
@@ -893,6 +933,8 @@ Emily
                 <span>• Championship Edition</span>
             </div>
             <div class="flex flex-wrap items-center gap-3 text-[11px]">
+                <a href="https://wheel.chiprojects.com/" target="_blank" rel="noopener noreferrer" class="text-cyan-400 font-semibold hover:underline flex items-center gap-1">🎡 Game of Wheel</a>
+                <span>•</span>
                 <button type="button" onclick="openTipModal()" class="text-amber-400 font-semibold hover:underline flex items-center gap-1">☕ Tip / Donate</button>
                 <span>•</span>
                 <button type="button" onclick="openLegalModal('privacy')" class="hover:text-amber-300 hover:underline">Privacy Policy (GDPR / CCPA)</button>
