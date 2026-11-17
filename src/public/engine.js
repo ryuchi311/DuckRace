@@ -540,10 +540,26 @@
         }
     };
 
+    function getDuckDisplayName(duck) {
+        return (duck.customName || duck.defaultName || '').trim();
+    }
+
+    function isDuplicateRacerName(name, excludeId) {
+        const normalized = (name || '').trim().toLowerCase();
+        if (!normalized || !Array.isArray(window.rosterState)) return false;
+        return window.rosterState.some(d => d.id !== excludeId && getDuckDisplayName(d).toLowerCase() === normalized);
+    }
+
     window.updateDuckCustomName = function (id, name) {
         const d = window.rosterState.find(x => x.id === id);
         if (d) {
-            d.customName = name.trim() || d.defaultName;
+            const candidate = name.trim() || d.defaultName;
+            if (isDuplicateRacerName(candidate, id)) {
+                setCommentary(`⚠️ Duplicate name "${candidate}" is not allowed! Each racer must have a unique name.`);
+                renderRosterCards();
+                return;
+            }
+            d.customName = candidate;
             if (typeof window.saveRosterToLocalStorage === 'function') window.saveRosterToLocalStorage();
             updateTargetSelectorOptions();
             if (window.raceState === 'idle') setupIdleStartingLineup();
@@ -565,6 +581,8 @@
     window.updateBulkCountPreview = function () {
         const textarea = document.getElementById('bulkNamesInput');
         const pill = document.getElementById('bulkCountPill');
+        const warnBox = document.getElementById('bulkDuplicateWarning');
+        const warnText = document.getElementById('bulkDuplicateText');
         if (!textarea || !pill) return;
         const names = window.parseBulkNamesList(textarea.value);
         pill.textContent = names.length === 1 ? '1 name detected' : `${names.length} names detected`;
@@ -572,6 +590,47 @@
             pill.className = 'text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/60 animate-pulse';
         } else {
             pill.className = 'text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700';
+        }
+
+        if (warnBox && warnText) {
+            const seen = new Set();
+            const dups = [];
+            for (const n of names) {
+                const key = n.toLowerCase();
+                if (seen.has(key)) dups.push(n);
+                else seen.add(key);
+            }
+            if (dups.length > 0) {
+                const preview = [...new Set(dups)].slice(0, 3).join(', ');
+                const extra = dups.length > 3 ? ` (+${dups.length - 3} more)` : '';
+                warnText.textContent = `⚠️ ${dups.length} duplicate name${dups.length > 1 ? 's' : ''} detected: ${preview}${extra}`;
+                warnBox.classList.remove('hidden');
+            } else {
+                warnBox.classList.add('hidden');
+            }
+        }
+    };
+
+    window.removeBulkDuplicates = function () {
+        const textarea = document.getElementById('bulkNamesInput');
+        if (!textarea) return;
+        const names = window.parseBulkNamesList(textarea.value);
+        const seen = new Set();
+        const unique = [];
+        let removed = 0;
+        for (const n of names) {
+            const key = n.toLowerCase();
+            if (seen.has(key)) {
+                removed++;
+            } else {
+                seen.add(key);
+                unique.push(n);
+            }
+        }
+        textarea.value = unique.join('\n');
+        window.updateBulkCountPreview();
+        if (removed > 0 && typeof setCommentary === 'function') {
+            setCommentary(`🧹 Removed ${removed} duplicate name${removed > 1 ? 's' : ''} from the bulk list!`);
         }
     };
 
@@ -720,10 +779,23 @@
     window.applyBulkNames = function (replaceAndMatch) {
         const textarea = document.getElementById('bulkNamesInput');
         if (!textarea) return;
-        const lines = typeof window.parseBulkNamesList === 'function'
+        const rawLines = typeof window.parseBulkNamesList === 'function'
             ? window.parseBulkNamesList(textarea.value)
             : textarea.value.split(/[\r\n,;]+/).map(l => l.trim()).filter(Boolean);
-        if (!lines.length) return;
+        if (!rawLines.length) return;
+
+        const seen = new Set();
+        const lines = [];
+        let duplicateCount = 0;
+        for (const name of rawLines) {
+            const key = name.toLowerCase();
+            if (seen.has(key)) {
+                duplicateCount++;
+                continue;
+            }
+            seen.add(key);
+            lines.push(name);
+        }
 
         if (lines.length > window.rosterState.length && typeof window.initBaseRoster === 'function') {
             window.initBaseRoster(Math.min(100, Math.max(24, lines.length)));
@@ -741,13 +813,20 @@
             for (let i = lines.length; i < window.rosterState.length; i++) {
                 window.rosterState[i].enabled = false;
             }
+        } else {
+            for (let i = lines.length; i < window.rosterState.length; i++) {
+                if (window.rosterState[i].enabled && seen.has(getDuckDisplayName(window.rosterState[i]).toLowerCase())) {
+                    window.rosterState[i].enabled = false;
+                }
+            }
         }
 
         if (typeof window.saveRosterToLocalStorage === 'function') window.saveRosterToLocalStorage();
         renderRosterCards();
         if (window.raceState === 'idle') setupIdleStartingLineup();
         if (typeof window.playBoostChime === 'function') window.playBoostChime();
-        setCommentary(`📋 Assigned ${lines.length} participant names to the Championship Fleet!`);
+        const dupNote = duplicateCount > 0 ? ` (${duplicateCount} duplicate${duplicateCount > 1 ? 's' : ''} skipped)` : '';
+        setCommentary(`📋 Assigned ${lines.length} unique participant names to the Championship Fleet!${dupNote}`);
     };
 
     window.selectAllDucks = function (selectAll) {
@@ -840,9 +919,16 @@
     function setupIdleStartingLineup() {
         const racers = (window.rosterState || []).filter(d => d.enabled);
         // When in Host IRL Waiting Mode, keep the track completely empty if 0 IRL players have joined so far!
-        const list = window.irlWaitingMode
+        const rawList = window.irlWaitingMode
             ? racers
             : (racers.length > 0 ? racers : (window.rosterState || []).slice(0, 8));
+        const seenNames = new Set();
+        const list = rawList.filter(d => {
+            const key = getDuckDisplayName(d).toLowerCase();
+            if (!key || seenNames.has(key)) return false;
+            seenNames.add(key);
+            return true;
+        });
         const count = list.length;
 
         if (count === 0) {

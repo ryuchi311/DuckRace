@@ -581,6 +581,8 @@
     window.updateBulkCountPreview = function () {
         const textarea = document.getElementById('bulkNamesInput');
         const pill = document.getElementById('bulkCountPill');
+        const warnBox = document.getElementById('bulkDuplicateWarning');
+        const warnText = document.getElementById('bulkDuplicateText');
         if (!textarea || !pill) return;
         const names = window.parseBulkNamesList(textarea.value);
         pill.textContent = names.length === 1 ? '1 name detected' : `${names.length} names detected`;
@@ -588,6 +590,47 @@
             pill.className = 'text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/60 animate-pulse';
         } else {
             pill.className = 'text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700';
+        }
+
+        if (warnBox && warnText) {
+            const seen = new Set();
+            const dups = [];
+            for (const n of names) {
+                const key = n.toLowerCase();
+                if (seen.has(key)) dups.push(n);
+                else seen.add(key);
+            }
+            if (dups.length > 0) {
+                const preview = [...new Set(dups)].slice(0, 3).join(', ');
+                const extra = dups.length > 3 ? ` (+${dups.length - 3} more)` : '';
+                warnText.textContent = `⚠️ ${dups.length} duplicate name${dups.length > 1 ? 's' : ''} detected: ${preview}${extra}`;
+                warnBox.classList.remove('hidden');
+            } else {
+                warnBox.classList.add('hidden');
+            }
+        }
+    };
+
+    window.removeBulkDuplicates = function () {
+        const textarea = document.getElementById('bulkNamesInput');
+        if (!textarea) return;
+        const names = window.parseBulkNamesList(textarea.value);
+        const seen = new Set();
+        const unique = [];
+        let removed = 0;
+        for (const n of names) {
+            const key = n.toLowerCase();
+            if (seen.has(key)) {
+                removed++;
+            } else {
+                seen.add(key);
+                unique.push(n);
+            }
+        }
+        textarea.value = unique.join('\n');
+        window.updateBulkCountPreview();
+        if (removed > 0 && typeof setCommentary === 'function') {
+            setCommentary(`🧹 Removed ${removed} duplicate name${removed > 1 ? 's' : ''} from the bulk list!`);
         }
     };
 

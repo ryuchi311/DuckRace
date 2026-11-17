@@ -497,6 +497,12 @@ David
 Emily
 ...up to 100 names"
                         class="w-full bg-slate-950 border-2 border-slate-700 focus:border-cyan-400 rounded-xl p-2.5 sm:p-3 text-sm text-slate-100 font-mono focus:outline-none resize-y leading-relaxed shadow-inner"></textarea>
+                    <div id="bulkDuplicateWarning" class="hidden mt-2 flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-amber-500/15 border border-amber-400/50 text-amber-200 text-xs">
+                        <span id="bulkDuplicateText" class="font-semibold">⚠️ Duplicate names detected!</span>
+                        <button type="button" onclick="removeBulkDuplicates()" class="px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-[11px] shrink-0 transition">
+                            🧹 Remove Duplicates
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Action Buttons & Quick Sample Fillers -->
@@ -1430,6 +1436,186 @@ Emily
     <!-- ========================================================== -->
     <!-- INTERACTIVE HOW TO PLAY & BEGINNER TUTORIAL MODAL          -->
     <!-- ========================================================== -->
+    
+    <!-- ========================================================== -->
+    <!-- PROFESSIONAL FIRST-VISIT INTERACTIVE ONBOARDING TOUR MODAL -->
+    <!-- ========================================================== -->
+    <div id="firstVisitTutorialModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/85 backdrop-blur-md overflow-y-auto">
+        <div class="relative w-full max-w-2xl ios-glass rounded-[28px] border border-white/20 shadow-[0_24px_70px_rgba(0,0,0,0.85)] overflow-hidden my-auto flex flex-col transition-all">
+            
+            <!-- Progress Bar Top -->
+            <div class="w-full bg-slate-950/80 h-1.5 flex">
+                <div id="tutStepBar" class="h-full bg-gradient-to-r from-cyan-400 via-amber-400 to-orange-500 transition-all duration-300" style="width: 25%;"></div>
+            </div>
+
+            <!-- Modal Header -->
+            <div class="px-5 sm:px-7 pt-5 sm:pt-6 pb-2 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-xs font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                        WELCOME GUIDE
+                    </span>
+                    <span id="tutStepIndicator" class="text-xs font-mono font-bold text-slate-400">Step 1 of 4</span>
+                </div>
+                <button onclick="skipFirstVisitTutorial()" class="text-xs font-semibold text-slate-400 hover:text-white px-2.5 py-1 rounded-lg hover:bg-white/10 transition" title="Close and don't show again">
+                    Skip Tutorial ✕
+                </button>
+            </div>
+
+            <!-- Step Content Panes -->
+            <div class="p-5 sm:p-7 pt-2 flex flex-col gap-4">
+                
+                <!-- STEP 1: Welcome & Overview -->
+                <div id="tutPane0" class="tut-pane flex flex-col gap-4">
+                    <div class="flex items-center gap-4 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent p-4 rounded-2xl border border-amber-400/25">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 via-yellow-400 to-orange-500 flex items-center justify-center text-3xl shadow-lg shadow-amber-500/30 shrink-0 animate-bob">
+                            🦆
+                        </div>
+                        <div>
+                            <h3 class="font-display text-lg sm:text-xl font-black text-white tracking-tight">
+                                Welcome to Ultimate Duck Race!
+                            </h3>
+                            <p class="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
+                                The championship broadcast simulator for parties, livestreams, team events, and classrooms. Up to <strong>100 unique ducks</strong> race down raging rapids!
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                        <div class="bg-slate-950/70 border border-white/10 p-3 rounded-xl flex flex-col gap-1">
+                            <span class="text-amber-400 font-bold text-sm">🏆 Fair Physics</span>
+                            <span class="text-slate-400 text-[11px]">Real-time currents, whirlpool turbulence, bread crumbs, and photo-finish slow-mo!</span>
+                        </div>
+                        <div class="bg-slate-950/70 border border-white/10 p-3 rounded-xl flex flex-col gap-1">
+                            <span class="text-cyan-400 font-bold text-sm">🎥 TV Multi-Cam</span>
+                            <span class="text-slate-400 text-[11px]">10 broadcast camera views including 3D Chase, Duck-Eye GoPro, and AI Auto-Director.</span>
+                        </div>
+                        <div class="bg-slate-950/70 border border-white/10 p-3 rounded-xl flex flex-col gap-1">
+                            <span class="text-purple-400 font-bold text-sm">📱 Mobile IRL QR</span>
+                            <span class="text-slate-400 text-[11px]">Audience scans a QR code to join with their names and cheer on their phones!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2: Name & Fleet Setup -->
+                <div id="tutPane1" class="tut-pane hidden flex flex-col gap-3.5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 flex items-center justify-center font-bold text-lg shrink-0">
+                            📋
+                        </div>
+                        <div>
+                            <h3 class="font-display text-base sm:text-lg font-black text-white">
+                                Step 1: Set Your Racers & Names
+                            </h3>
+                            <p class="text-xs text-slate-400">Customizing racers takes just seconds.</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2.5 text-xs">
+                        <div class="bg-slate-950/70 border border-white/10 p-3.5 rounded-xl">
+                            <strong class="text-cyan-300 block mb-1">🏷️ Bulk Name Importer</strong>
+                            <p class="text-slate-300 text-[11px] leading-relaxed">
+                                Paste any list of student, viewer, or coworker names into the text box and click <span class="text-cyan-300 font-bold">"Apply & Match Fleet"</span>. The app automatically sizes the fleet and labels each racer!
+                            </p>
+                        </div>
+                        <div class="bg-slate-950/70 border border-white/10 p-3.5 rounded-xl">
+                            <strong class="text-amber-300 block mb-1">🎲 One-Click Fleet Presets</strong>
+                            <p class="text-slate-300 text-[11px] leading-relaxed">
+                                Use the quick buttons like <span class="font-bold text-amber-300">"🦆 100"</span> for a full championship or <span class="font-bold text-amber-300">"🎲 25"</span> for a quick party tournament.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 3: Camera & Interaction -->
+                <div id="tutPane2" class="tut-pane hidden flex flex-col gap-3.5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-400/40 flex items-center justify-center font-bold text-lg shrink-0">
+                            🎥
+                        </div>
+                        <div>
+                            <h3 class="font-display text-base sm:text-lg font-black text-white">
+                                Step 2: Interactive Race Director
+                            </h3>
+                            <p class="text-xs text-slate-400">Control the broadcast like a live TV producer.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                        <div class="bg-slate-950/70 border border-white/10 p-3 rounded-xl">
+                            <span class="text-amber-300 font-bold block mb-1">👆 Tap to Cheer & Lock</span>
+                            <p class="text-slate-400 text-[11px] leading-relaxed">
+                                Click or tap any swimming duck on the canvas to trigger an instant Cheer Boost and lock the camera on them!
+                            </p>
+                        </div>
+                        <div class="bg-slate-950/70 border border-white/10 p-3 rounded-xl">
+                            <span class="text-purple-300 font-bold block mb-1">⚡ Quack Surge (Spacebar)</span>
+                            <p class="text-slate-400 text-[11px] leading-relaxed">
+                                Press Spacebar or hit "Surge!" to spawn whirlpool currents and speed boosters into the stream.
+                            </p>
+                        </div>
+                        <div class="bg-slate-950/70 border border-white/10 p-3 rounded-xl">
+                            <span class="text-cyan-300 font-bold block mb-1">🎬 TV Auto-Director (Key A)</span>
+                            <p class="text-slate-400 text-[11px] leading-relaxed">
+                                Turn on Auto-Director to let AI dynamically cut between lead battles, mid-pack brawls, and finish tripod views!
+                            </p>
+                        </div>
+                        <div class="bg-slate-950/70 border border-white/10 p-3 rounded-xl">
+                            <span class="text-emerald-300 font-bold block mb-1">🕺 3D Dancing Victory Podium</span>
+                            <p class="text-slate-400 text-[11px] leading-relaxed">
+                                Top 3 finishers celebrate on 3D pedestals with animated disco, samba, and breakdance moves you can rotate!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 4: Ready to Race! -->
+                <div id="tutPane3" class="tut-pane hidden flex flex-col gap-4 text-center">
+                    <div class="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-400 flex items-center justify-center text-3xl mx-auto shadow-lg shadow-emerald-500/20">
+                        🚀
+                    </div>
+                    <div>
+                        <h3 class="font-display text-xl font-black text-white">
+                            You're All Set! Ready to Race?
+                        </h3>
+                        <p class="text-xs sm:text-sm text-slate-300 mt-1 max-w-md mx-auto">
+                            Jump straight into a quick 12-duck demo race to see the physics in action, or customize your own fleet right now!
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                        <button onclick="finishTutorialAndLaunchDemo()" class="btn-game w-full sm:w-auto bg-gradient-to-r from-emerald-400 to-teal-400 text-slate-950 font-black px-6 py-2.5 rounded-xl text-xs sm:text-sm shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2">
+                            <span>🚀</span> Launch Instant Demo (12 Ducks)
+                        </button>
+                        <button onclick="finishTutorialAndCustomize()" class="btn-game w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm">
+                            ✏️ Customize My Own Ducks
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer Controls -->
+            <div class="px-5 sm:px-7 py-4 bg-slate-950/60 border-t border-white/10 flex items-center justify-between">
+                <button id="tutPrevBtn" onclick="prevTutorialStep()" class="btn-game bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-xl text-xs font-bold transition opacity-40 cursor-not-allowed" disabled>
+                    ← Back
+                </button>
+
+                <!-- Step Dots -->
+                <div class="flex items-center gap-2">
+                    <span id="tutDot0" class="w-2.5 h-2.5 rounded-full bg-amber-400 transition-all scale-125"></span>
+                    <span id="tutDot1" class="w-2 h-2 rounded-full bg-slate-700 transition-all"></span>
+                    <span id="tutDot2" class="w-2 h-2 rounded-full bg-slate-700 transition-all"></span>
+                    <span id="tutDot3" class="w-2 h-2 rounded-full bg-slate-700 transition-all"></span>
+                </div>
+
+                <button id="tutNextBtn" onclick="nextTutorialStep()" class="btn-game bg-amber-400 hover:bg-amber-300 text-slate-950 px-5 py-1.5 rounded-xl text-xs font-black transition border-b-2 border-amber-600">
+                    Next →
+                </button>
+            </div>
+
+        </div>
+    </div>
+
     <div id="howToPlayModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-slate-950/90 backdrop-blur-md overflow-y-auto">
         <div class="relative w-full max-w-3xl bg-slate-900 border-2 border-amber-400/50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh]">
             
@@ -3734,6 +3920,129 @@ Emily
         /**************************************************************
          * INTERACTIVE ONBOARDING & HOW TO PLAY SYSTEM
          **************************************************************/
+        
+        /**************************************************************
+         * PROFESSIONAL FIRST-VISIT ONBOARDING & TUTORIAL CONTROLLER
+         **************************************************************/
+        let currentTutStep = 0;
+        const TOTAL_TUT_STEPS = 4;
+
+        window.openFirstVisitTutorial = function(forceStep = 0) {
+            const modal = document.getElementById('firstVisitTutorialModal');
+            if (!modal) return;
+            currentTutStep = forceStep;
+            updateTutorialUI();
+            modal.classList.remove('hidden');
+        };
+
+        window.closeFirstVisitTutorial = function() {
+            const modal = document.getElementById('firstVisitTutorialModal');
+            if (modal) modal.classList.add('hidden');
+        };
+
+        window.skipFirstVisitTutorial = function() {
+            closeFirstVisitTutorial();
+            try {
+                localStorage.setItem('duck_race_first_visit_seen', 'true');
+            } catch(e) {}
+        };
+
+        window.nextTutorialStep = function() {
+            if (currentTutStep < TOTAL_TUT_STEPS - 1) {
+                currentTutStep++;
+                updateTutorialUI();
+            } else {
+                finishTutorialAndCustomize();
+            }
+        };
+
+        window.prevTutorialStep = function() {
+            if (currentTutStep > 0) {
+                currentTutStep--;
+                updateTutorialUI();
+            }
+        };
+
+        function updateTutorialUI() {
+            for (let i = 0; i < TOTAL_TUT_STEPS; i++) {
+                const pane = document.getElementById('tutPane' + i);
+                const dot = document.getElementById('tutDot' + i);
+                if (pane) {
+                    if (i === currentTutStep) {
+                        pane.classList.remove('hidden');
+                    } else {
+                        pane.classList.add('hidden');
+                    }
+                }
+                if (dot) {
+                    if (i === currentTutStep) {
+                        dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 transition-all scale-125';
+                    } else {
+                        dot.className = 'w-2 h-2 rounded-full bg-slate-700 transition-all';
+                    }
+                }
+            }
+
+            const stepIndicator = document.getElementById('tutStepIndicator');
+            if (stepIndicator) {
+                stepIndicator.textContent = `Step ${currentTutStep + 1} of ${TOTAL_TUT_STEPS}`;
+            }
+
+            const bar = document.getElementById('tutStepBar');
+            if (bar) {
+                bar.style.width = `${((currentTutStep + 1) / TOTAL_TUT_STEPS) * 100}%`;
+            }
+
+            const prevBtn = document.getElementById('tutPrevBtn');
+            if (prevBtn) {
+                if (currentTutStep === 0) {
+                    prevBtn.disabled = true;
+                    prevBtn.classList.add('opacity-40', 'cursor-not-allowed');
+                } else {
+                    prevBtn.disabled = false;
+                    prevBtn.classList.remove('opacity-40', 'cursor-not-allowed');
+                }
+            }
+
+            const nextBtn = document.getElementById('tutNextBtn');
+            if (nextBtn) {
+                if (currentTutStep === TOTAL_TUT_STEPS - 1) {
+                    nextBtn.textContent = 'Get Started 🚀';
+                } else {
+                    nextBtn.textContent = 'Next →';
+                }
+            }
+        }
+
+        window.finishTutorialAndLaunchDemo = function() {
+            closeFirstVisitTutorial();
+            try {
+                localStorage.setItem('duck_race_first_visit_seen', 'true');
+            } catch(e) {}
+            quickStartDemoRace();
+        };
+
+        window.finishTutorialAndCustomize = function() {
+            closeFirstVisitTutorial();
+            try {
+                localStorage.setItem('duck_race_first_visit_seen', 'true');
+            } catch(e) {}
+            showSetupView();
+        };
+
+        // Automatic First-Visit Detection: trigger tutorial on first arrival!
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                const hasSeenTutorial = localStorage.getItem('duck_race_first_visit_seen');
+                if (!hasSeenTutorial) {
+                    // Small delay so page fonts and canvas initialize smoothly
+                    setTimeout(() => {
+                        openFirstVisitTutorial(0);
+                    }, 450);
+                }
+            } catch(e) {}
+        });
+
         window.openHowToPlayModal = function(tabIndex = 0) {
             const modal = document.getElementById('howToPlayModal');
             if (modal) {
