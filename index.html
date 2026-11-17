@@ -453,14 +453,21 @@
                         <button onclick="selectRandomParty(25)" class="bg-slate-800 hover:bg-slate-700 text-amber-300 px-2 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition text-center">🎲 25</button>
                         <button onclick="resetDefaultNames()" class="bg-slate-800 hover:bg-slate-700 text-rose-300 px-2 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition sm:ml-auto text-center">↺ Reset</button>
                     </div>
-                    <!-- Game Dev Suite: Export & Import Full Roster -->
+                    <!-- Game Dev Suite: Export & Import Full Roster (Excel / CSV / JSON) -->
                     <div class="grid grid-cols-2 gap-1.5">
-                        <button type="button" onclick="exportRosterConfig()" class="btn-game bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-amber-400/50 text-amber-300 py-1.5 px-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition" title="Export full duck roster and settings to JSON">
-                            <span>📦</span> <span>Export Roster</span>
+                        <button type="button" onclick="exportRosterToExcel()" class="btn-game bg-emerald-700/30 hover:bg-emerald-600/40 border border-emerald-500/50 hover:border-emerald-400 text-emerald-300 py-1.5 px-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition shadow-sm" title="Export duck roster to Excel / CSV (.csv spreadsheet)">
+                            <span>📊</span> <span>Export Excel</span>
                         </button>
-                        <button type="button" onclick="triggerRosterImportDialog()" class="btn-game bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-cyan-400/50 text-cyan-300 py-1.5 px-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition" title="Import customized duck fleet from JSON">
-                            <span>📂</span> <span>Import JSON</span>
+                        <button type="button" onclick="triggerRosterImportDialog()" class="btn-game bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-cyan-400/50 text-cyan-300 py-1.5 px-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition" title="Import duck fleet from Excel/CSV or JSON file">
+                            <span>📂</span> <span>Import Excel/JSON</span>
                         </button>
+                    </div>
+                    <!-- Secondary format export options -->
+                    <div class="flex items-center justify-between text-[10px] text-slate-400 px-1">
+                        <span>Also supports:</span>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="exportRosterConfig()" class="text-amber-400 hover:underline font-semibold" title="Export as raw JSON backup">📦 JSON Export</button>
+                        </div>
                     </div>
                     <!-- Optional IRL Mode Quick Launch -->
                     <button onclick="startHostIrlWaitingMode()" class="btn-game w-full bg-fuchsia-600/20 hover:bg-fuchsia-600/30 border border-fuchsia-500/50 text-fuchsia-200 py-2 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition text-center">
@@ -517,9 +524,11 @@ Emily
                         <span>•</span>
                         <button type="button" onclick="clearBulkInput()" class="text-rose-400 hover:underline text-xs">Clear</button>
                         <span>•</span>
+                        <button type="button" onclick="exportRosterToExcel()" class="text-emerald-400 hover:underline font-semibold text-xs" title="Export roster to Excel / CSV file">📊 Excel File</button>
+                        <span>•</span>
                         <button type="button" onclick="exportRosterConfig()" class="text-cyan-300 hover:underline font-semibold text-xs" title="Export roster to JSON">💾 Save File</button>
                         <span>•</span>
-                        <button type="button" onclick="triggerRosterImportDialog()" class="text-cyan-300 hover:underline font-semibold text-xs" title="Load roster from JSON">📂 Load File</button>
+                        <button type="button" onclick="triggerRosterImportDialog()" class="text-cyan-300 hover:underline font-semibold text-xs" title="Load roster from Excel/CSV or JSON file">📂 Load File</button>
                     </div>
 
                     <div class="grid grid-cols-2 sm:flex items-center gap-2">
@@ -4259,6 +4268,6 @@ Emily
             requestAnimationFrame(mainAnimationLoop);
         };
     </script>
-    <input type="file" id="rosterImportFileInput" accept=".json,application/json" class="hidden" onchange="importRosterConfigFromFile(this)" />
+    <input type="file" id="rosterImportFileInput" accept=".json,.csv,.txt,application/json,text/csv,text/plain" class="hidden" onchange="importRosterConfigFromFile(this)" />
 </body>
 </html>

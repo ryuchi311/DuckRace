@@ -2609,8 +2609,49 @@
     };
 
     // =============================================================
-    // GAME DEV SUITE: EXPORT & IMPORT FULL ROSTER & GAME CONFIG
+    // GAME DEV SUITE: EXPORT & IMPORT FULL ROSTER (EXCEL / CSV / JSON)
     // =============================================================
+    window.exportRosterToExcel = function () {
+        if (!window.rosterState || !window.rosterState.length) {
+            setCommentary(`⚠️ No roster available to export!`);
+            return;
+        }
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}`;
+
+        const escapeCsv = (val) => `"${String(val ?? '').replace(/"/g, '""')}"`;
+        const headers = [
+            'Racer Number',
+            'Participant Name',
+            'Character Title',
+            'Default Name',
+            'Archetype ID',
+            'Battle Cry',
+            'Status (Enabled/Disabled)',
+            'Aura Color',
+            'Description'
+        ];
+
+        const rows = window.rosterState.map((d, idx) => [
+            idx + 1,
+            escapeCsv(d.customName || d.defaultName || `Duck #${idx + 1}`),
+            escapeCsv(d.title || 'Champion'),
+            escapeCsv(d.defaultName || ''),
+            escapeCsv(d.archetypeId || d.id || 'priest'),
+            escapeCsv(d.battleCry || 'QUACK!'),
+            d.enabled ? 'Enabled' : 'Disabled',
+            escapeCsv(d.auraColor || '#fde047'),
+            escapeCsv(d.desc || '')
+        ].join(','));
+
+        // Include UTF-8 BOM (\uFEFF) so Excel opens accents and special characters cleanly without mojibake
+        const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
+        triggerFileDownload(`duck-race-roster_${stamp}.csv`, csvContent, 'text/csv;charset=utf-8;');
+        if (typeof window.playBoostChime === 'function') window.playBoostChime();
+        setCommentary(`📊 Exported all ${window.rosterState.length} ducks to Excel/CSV spreadsheet (duck-race-roster_${stamp}.csv)!`);
+    };
+
     window.exportRosterConfig = function () {
         if (!window.rosterState || !window.rosterState.length) {
             setCommentary(`⚠️ No roster available to export!`);
@@ -2660,35 +2701,158 @@
         }
     };
 
+    // Helper: Parse CSV string handling quotes and commas cleanly
+    function parseCsvToRows(text) {
+        const rows = [];
+        let currentRow = [];
+        let currentField = '';
+        let inQuotes = false;
+        const cleanText = text.replace(/^\uFEFF/, ''); // strip BOM if present
+
+        for (let i = 0; i < cleanText.length; i++) {
+            const char = cleanText[i];
+            const nextChar = cleanText[i + 1];
+
+            if (inQuotes) {
+                if (char === '"') {
+                    if (nextChar === '"') {
+                        currentField += '"';
+                        i++; // skip escaped quote
+                    } else {
+                        inQuotes = false;
+                    }
+                } else {
+                    currentField += char;
+                }
+            } else {
+                if (char === '"') {
+                    inQuotes = true;
+                } else if (char === ',') {
+                    currentRow.push(currentField.trim());
+                    currentField = '';
+                } else if (char === '\r') {
+                    if (nextChar === '\n') i++;
+                    currentRow.push(currentField.trim());
+                    rows.push(currentRow);
+                    currentRow = [];
+                    currentField = '';
+                } else if (char === '\n') {
+                    currentRow.push(currentField.trim());
+                    rows.push(currentRow);
+                    currentRow = [];
+                    currentField = '';
+                } else {
+                    currentField += char;
+                }
+            }
+        }
+        if (currentField.length > 0 || currentRow.length > 0) {
+            currentRow.push(currentField.trim());
+            rows.push(currentRow);
+        }
+        return rows.filter(r => r.length > 0 && r.some(c => c.length > 0));
+    }
+
     window.importRosterConfigFromFile = function (fileInput) {
         const file = fileInput.files && fileInput.files[0];
         if (!file) return;
 
         const reader = new FileReader();
+        const fileName = (file.name || '').toLowerCase();
+
         reader.onload = function (e) {
+            const rawContent = e.target.result;
             try {
-                const parsed = JSON.parse(e.target.result);
                 let importedRoster = null;
 
-                if (Array.isArray(parsed)) {
-                    importedRoster = parsed;
-                } else if (parsed && Array.isArray(parsed.roster)) {
-                    importedRoster = parsed.roster;
-                    if (parsed.gameConfig) {
-                        if (parsed.gameConfig.durationSeconds && typeof setDurationPreset === 'function') {
-                            setDurationPreset(parsed.gameConfig.durationSeconds);
-                        }
-                        if (parsed.gameConfig.mapTheme && typeof changeTheme === 'function') {
-                            changeTheme(parsed.gameConfig.mapTheme);
-                        }
-                        if (parsed.gameConfig.obstacleDifficulty && typeof changeObstacleDifficulty === 'function') {
-                            changeObstacleDifficulty(parsed.gameConfig.obstacleDifficulty);
+                // 1. If CSV or Excel exported file (.csv or looks like comma-separated lines)
+                if (fileName.endsWith('.csv') || (!fileName.endsWith('.json') && !rawContent.trim().startsWith('{') && !rawContent.trim().startsWith('['))) {
+                    const parsedRows = parseCsvToRows(rawContent);
+                    if (!parsedRows.length) {
+                        throw new Error('CSV file appears to be empty');
+                    }
+
+                    // Check if first row is header
+                    const firstRow = parsedRows[0].map(c => c.toLowerCase());
+                    let hasHeader = firstRow.some(c => c.includes('name') || c.includes('racer') || c.includes('title') || c.includes('archetype'));
+                    const dataRows = hasHeader ? parsedRows.slice(1) : parsedRows;
+
+                    if (!dataRows.length) {
+                        throw new Error('No data rows found in CSV spreadsheet');
+                    }
+
+                    // Determine column mappings if header is present
+                    let nameCol = 1; // Default: column 2 if header is [Racer Number, Participant Name, ...]
+                    let archCol = 4; // Default: Archetype ID column
+                    let cryCol = 5;  // Default: Battle Cry column
+                    let statusCol = 6;
+
+                    if (hasHeader) {
+                        const nameIdx = firstRow.findIndex(c => c.includes('participant') || c === 'name' || c.includes('racer name') || c.includes('duck name'));
+                        if (nameIdx !== -1) nameCol = nameIdx;
+                        else if (firstRow.length === 1) nameCol = 0;
+
+                        const archIdx = firstRow.findIndex(c => c.includes('archetype') || c.includes('costume') || c.includes('character'));
+                        if (archIdx !== -1) archCol = archIdx;
+
+                        const cryIdx = firstRow.findIndex(c => c.includes('cry') || c.includes('battle'));
+                        if (cryIdx !== -1) cryCol = cryIdx;
+
+                        const stIdx = firstRow.findIndex(c => c.includes('status') || c.includes('enabled'));
+                        if (stIdx !== -1) statusCol = stIdx;
+                    } else if (dataRows[0].length === 1) {
+                        // Plain list of names in single column
+                        nameCol = 0;
+                    }
+
+                    importedRoster = dataRows.map((cols, i) => {
+                        const nameVal = (cols[nameCol] || cols[0] || `Duck #${i + 1}`).trim();
+                        const archVal = cols[archCol] ? cols[archCol].trim().toLowerCase() : '';
+                        const cryVal = cols[cryCol] ? cols[cryCol].trim() : '';
+                        const statusVal = cols[statusCol] ? cols[statusCol].trim().toLowerCase() : '';
+
+                        const baseArchetype = DUCK_ARCHETYPES.find(a => a.id === archVal || a.defaultName.toLowerCase() === archVal)
+                            || DUCK_ARCHETYPES[i % DUCK_ARCHETYPES.length];
+
+                        return {
+                            id: `duck_${i + 1}`,
+                            archetypeId: baseArchetype.id,
+                            defaultName: baseArchetype.defaultName,
+                            customName: nameVal || baseArchetype.defaultName,
+                            title: baseArchetype.title,
+                            auraColor: baseArchetype.auraColor,
+                            bodyColor: baseArchetype.bodyColor,
+                            wingColor: baseArchetype.wingColor,
+                            quackPitch: baseArchetype.quackPitch || 440,
+                            battleCry: cryVal || baseArchetype.battleCry || 'FULL SEND!',
+                            desc: baseArchetype.desc || 'Championship Duck',
+                            enabled: statusVal ? (!statusVal.includes('dis') && statusVal !== 'false' && statusVal !== '0') : true
+                        };
+                    });
+                } else {
+                    // 2. JSON Parser
+                    const parsed = JSON.parse(rawContent);
+
+                    if (Array.isArray(parsed)) {
+                        importedRoster = parsed;
+                    } else if (parsed && Array.isArray(parsed.roster)) {
+                        importedRoster = parsed.roster;
+                        if (parsed.gameConfig) {
+                            if (parsed.gameConfig.durationSeconds && typeof setDurationPreset === 'function') {
+                                setDurationPreset(parsed.gameConfig.durationSeconds);
+                            }
+                            if (parsed.gameConfig.mapTheme && typeof changeTheme === 'function') {
+                                changeTheme(parsed.gameConfig.mapTheme);
+                            }
+                            if (parsed.gameConfig.obstacleDifficulty && typeof changeObstacleDifficulty === 'function') {
+                                changeObstacleDifficulty(parsed.gameConfig.obstacleDifficulty);
+                            }
                         }
                     }
                 }
 
                 if (!importedRoster || !importedRoster.length) {
-                    throw new Error('Invalid or empty roster array in JSON file');
+                    throw new Error('Invalid or empty roster in selected file');
                 }
 
                 // Merge imported ducks into rosterState
@@ -2721,7 +2885,7 @@
                 }
 
                 if (typeof window.playBoostChime === 'function') window.playBoostChime(true);
-                setCommentary(`✅ Successfully imported ${window.rosterState.length} ducks from JSON file!`);
+                setCommentary(`✅ Successfully imported ${window.rosterState.length} ducks from ${fileName.endsWith('.csv') ? 'Excel/CSV spreadsheet' : 'file'}!`);
             } catch (err) {
                 console.error('Import error:', err);
                 alert('Could not import roster: ' + err.message);
