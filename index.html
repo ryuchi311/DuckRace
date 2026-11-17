@@ -3093,7 +3093,7 @@ Emily
         let stageSyncMode = 'LOCAL'; // 'CLOUD' | 'P2P_ONLINE' | 'LOCAL'
         let stageParticipants = []; // Filtered for current stageRoomPin
         let allCloudParticipantsCache = [];
-        let selectedMobileDuckId = DUCK_ARCHETYPES[0].id;
+        let selectedMobileDuckId = DUCK_ARCHETYPES[Math.floor(Math.random() * DUCK_ARCHETYPES.length)].id;
         let currentMobileParticipant = null;
         let processedBoostTimestamps = new Set();
         let detectedLanOrigin = null; // Auto-detected LAN URL from server.js (e.g. http://192.168.1.50:3000)
@@ -3893,6 +3893,12 @@ Emily
         function openMobileJoinModal(prefillPin) {
             const pinInput = document.getElementById('mobilePinInput');
             if (pinInput) pinInput.value = (prefillPin || stageRoomPin || 'DUCK').toUpperCase();
+            if (!currentMobileParticipant && Array.isArray(DUCK_ARCHETYPES) && DUCK_ARCHETYPES.length > 0) {
+                const randArch = DUCK_ARCHETYPES[Math.floor(Math.random() * DUCK_ARCHETYPES.length)];
+                selectedMobileDuckId = randArch.id;
+                const label = document.getElementById('mobileSelectedDuckLabel');
+                if (label) label.textContent = randArch.title;
+            }
             renderMobileDuckPicker();
             document.getElementById('mobileControllerModal').classList.remove('hidden');
         }
