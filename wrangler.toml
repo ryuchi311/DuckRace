@@ -1,4 +1,4 @@
-name = "duck-race"
+name = "duckrace"
 main = "src/worker/index.js"
 compatibility_date = "2025-04-01"
 
