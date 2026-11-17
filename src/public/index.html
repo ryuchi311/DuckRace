@@ -1966,8 +1966,9 @@ Emily
 
                 <!-- Notes / Reward Contact Input -->
                 <div>
-                    <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Notes (Email / GCash / Reward Info - Optional)</label>
-                    <input id="mobileNotesInput" type="text" maxlength="80" placeholder="e.g. name@email.com or GCash 0917..." class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-xl px-3.5 py-2 text-xs font-semibold text-cyan-200 placeholder-slate-500 focus:outline-none" />
+                    <label class="block text-[10px] font-extrabold uppercase tracking-wider text-amber-300 mb-1">Notes (Email / GCash / Reward Info) <span class="text-rose-400">* Required</span></label>
+                    <input id="mobileNotesInput" type="text" required maxlength="80" placeholder="Required: e.g. name@email.com or GCash 0917..." class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-xl px-3.5 py-2 text-xs font-semibold text-cyan-200 placeholder-slate-500 focus:outline-none" />
+                    <div id="mobileNotesWarning" class="hidden text-[10px] text-rose-400 font-bold mt-1">⚠️ Please fill in the Notes field (Email / GCash / Reward Info) to join.</div>
                 </div>
 
                 <!-- COPPA & Age Gate Checkbox (Required) -->
@@ -3926,7 +3927,20 @@ Emily
             const pinVal = (document.getElementById('mobilePinInput').value || stageRoomPin || 'DUCK').trim().toUpperCase();
             const nameVal = (document.getElementById('mobilePlayerNameInput').value || '').trim();
             const cryVal = (document.getElementById('mobileBattleCryInput').value || 'FULL SEND!').trim();
-            const notesVal = (document.getElementById('mobileNotesInput')?.value || '').trim();
+            const notesInputEl = document.getElementById('mobileNotesInput');
+            const notesWarning = document.getElementById('mobileNotesWarning');
+            const notesVal = (notesInputEl?.value || '').trim();
+            if (!notesVal) {
+                if (notesWarning) notesWarning.classList.remove('hidden');
+                if (notesInputEl) {
+                    notesInputEl.focus();
+                    notesInputEl.classList.add('border-rose-500');
+                }
+                if (typeof playQuack === 'function') playQuack(350, true, 'sad');
+                return;
+            }
+            if (notesWarning) notesWarning.classList.add('hidden');
+            if (notesInputEl) notesInputEl.classList.remove('border-rose-500');
             const arch = DUCK_ARCHETYPES.find(d => d.id === selectedMobileDuckId) || DUCK_ARCHETYPES[0];
 
             const finalName = nameVal || `${arch.defaultName}`;

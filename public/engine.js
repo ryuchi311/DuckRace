@@ -974,6 +974,7 @@
             title: duck.title || 'Champion',
             customName: duck.customName || duck.defaultName,
             battleCry: duck.battleCry || 'QUACK!',
+            notes: duck.notes || '',
             quackPitch: duck.quackPitch || 520,
             auraColor: duck.auraColor || '#fde047',
             x: startX,
@@ -2504,7 +2505,8 @@
                     name: list[0].customName,
                     archetype: list[0].title,
                     finishTime: list[0].finishTime || null,
-                    battleCry: list[0].battleCry || null
+                    battleCry: list[0].battleCry || null,
+                    notes: list[0].notes || list[0].duckData?.notes || ''
                 } : null,
                 standings: list.map((r, idx) => ({
                     rank: idx + 1,
@@ -2516,7 +2518,8 @@
                     finishTimeSeconds: r.finishTime ? Number(r.finishTime.toFixed(3)) : null,
                     progressPercent: r.finished ? 100 : Math.min(100, Math.max(0, Math.round((r.progress || 0) * 100))),
                     finished: !!r.finished,
-                    battleCry: r.battleCry || ''
+                    battleCry: r.battleCry || '',
+                    notes: r.notes || r.duckData?.notes || ''
                 }))
             };
             const jsonStr = JSON.stringify(exportPayload, null, 2);
@@ -2525,7 +2528,7 @@
             setCommentary(`💾 Exported complete race data to JSON (duck-race-results_${stamp}.json)!`);
         } else if (format === 'csv') {
             const escapeCsv = (val) => `"${String(val ?? '').replace(/"/g, '""')}"`;
-            const headers = ['Rank', 'Medal', 'Participant Name', 'Character Title', 'Finish Time (s)', 'Progress (%)', 'Map', 'Difficulty', 'Battle Cry'];
+            const headers = ['Rank', 'Medal', 'Participant Name', 'Character Title', 'Finish Time (s)', 'Progress (%)', 'Map', 'Difficulty', 'Battle Cry', 'Notes / Contact'];
             const rows = list.map((r, idx) => {
                 const rank = idx + 1;
                 const medal = idx === 0 ? '1st (Gold)' : idx === 1 ? '2nd (Silver)' : idx === 2 ? '3rd (Bronze)' : `#${rank}`;
@@ -2540,7 +2543,8 @@
                     progStr,
                     escapeCsv(mapName),
                     escapeCsv(diffMode),
-                    escapeCsv(r.battleCry || '')
+                    escapeCsv(r.battleCry || ''),
+                    escapeCsv(r.notes || r.duckData?.notes || '')
                 ].join(',');
             });
             const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
@@ -2559,7 +2563,8 @@
                 ...list.map((r, idx) => {
                     const medal = idx === 0 ? '🥇 1st' : idx === 1 ? '🥈 2nd' : idx === 2 ? '🥉 3rd' : `#${String(idx + 1).padStart(2, ' ')}`;
                     const timeStr = r.finishTime ? `${r.finishTime.toFixed(2)}s` : `${Math.round((r.progress || 0) * 100)}%`;
-                    return `${medal.padEnd(7, ' ')} | ${r.customName} (${r.title}) — ${timeStr}`;
+                    const notesStr = (r.notes || r.duckData?.notes || '').trim();
+                    return `${medal.padEnd(7, ' ')} | ${r.customName} (${r.title}) — ${timeStr}${notesStr ? ` | Notes: ${notesStr}` : ''}`;
                 }),
                 `====================================================`
             ];
@@ -2572,7 +2577,8 @@
                 ...list.map((r, idx) => {
                     const medal = idx === 0 ? '🥇 1.' : idx === 1 ? '🥈 2.' : idx === 2 ? '🥉 3.' : `${idx + 1}.`;
                     const timeStr = r.finishTime ? `${r.finishTime.toFixed(2)}s` : `${Math.round((r.progress || 0) * 100)}%`;
-                    return `${medal} ${r.customName} (${r.title}) - ${timeStr}`;
+                    const copyNotes = (r.notes || r.duckData?.notes || '').trim();
+                    return `${medal} ${r.customName} (${r.title}) - ${timeStr}${copyNotes ? ` [${copyNotes}]` : ''}`;
                 })
             ];
             const text = lines.join('\n');
