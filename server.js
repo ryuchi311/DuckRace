@@ -194,14 +194,31 @@ const server = http.createServer(async (req, res) => {
     if (!db.rooms[pin]) db.rooms[pin] = [];
     const roomList = db.rooms[pin];
 
+    const rawIp = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket?.remoteAddress || '';
+    const clientIp = rawIp.replace(/^::ffff:/, '');
+
     if (body.participantId) {
       const idx = roomList.findIndex(p => p.participantId === body.participantId);
+      if (idx === -1 && clientIp) {
+        const ipAlreadyJoined = roomList.some(p => p.clientIp && p.clientIp === clientIp && p.participantId !== body.participantId);
+        if (ipAlreadyJoined) {
+          sendJson(res, 409, {
+            ok: false,
+            error: 'DUPLICATE_DEVICE',
+            message: 'This device has already joined this room. Multi-browser joining is not allowed.'
+          });
+          return;
+        }
+      }
+
       const record = {
         participantId: String(body.participantId),
         roomPin: pin,
         playerName: String(body.playerName || 'Stage Duck').slice(0, 40),
         duckId: String(body.duckId || 'priest'),
         battleCry: String(body.battleCry || 'QUACK!').slice(0, 50),
+        notes: String(body.notes || '').slice(0, 80),
+        clientIp,
         joinedAt: Number(body.joinedAt) || Date.now(),
         lastBoostAt: Number(body.lastBoostAt) || 0
       };

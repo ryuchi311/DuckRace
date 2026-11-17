@@ -1704,6 +1704,12 @@ Emily
                     <input id="mobileBattleCryInput" type="text" maxlength="28" value="OUTTA MY WAY!" class="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-xs font-bold text-amber-300 focus:outline-none" />
                 </div>
 
+                <!-- Notes / Reward Contact Input -->
+                <div>
+                    <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Notes (Email / GCash / Reward Info - Optional)</label>
+                    <input id="mobileNotesInput" type="text" maxlength="80" placeholder="e.g. name@email.com or GCash 0917..." class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-xl px-3.5 py-2 text-xs font-semibold text-cyan-200 placeholder-slate-500 focus:outline-none" />
+                </div>
+
                 <!-- COPPA & Age Gate Checkbox (Required) -->
                 <div class="bg-slate-950/80 border border-amber-400/30 rounded-xl p-2.5 space-y-1.5">
                     <label class="flex items-start gap-2 cursor-pointer select-none">
@@ -2824,7 +2830,15 @@ Emily
             }
         };
 
-        let stageRoomPin = 'DUCK';
+        function generateDynamicRoomPin() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let pin = '';
+            for (let i = 0; i < 4; i++) {
+                pin += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return pin;
+        }
+        let stageRoomPin = (new URLSearchParams(window.location.search).get('pin') || generateDynamicRoomPin()).trim().toUpperCase().replace(/[^A-Z0-9]/g, '') || generateDynamicRoomPin();
         let stageSyncMode = 'LOCAL'; // 'CLOUD' | 'P2P_ONLINE' | 'LOCAL'
         let stageParticipants = []; // Filtered for current stageRoomPin
         let allCloudParticipantsCache = [];
@@ -2998,12 +3012,19 @@ Emily
 
         async function publishToLocalServer(participant) {
             try {
-                await fetch('/api/stage-join', {
+                const res = await fetch('/api/stage-join', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(participant)
                 });
-            } catch (e) {}
+                if (res.status === 409) {
+                    const data = await res.json().catch(() => ({}));
+                    return { ok: false, error: data.error || 'DUPLICATE_DEVICE', message: data.message || 'This device has already joined this room.' };
+                }
+                return { ok: res.ok };
+            } catch (e) {
+                return { ok: true }; // Offline/static fallback
+            }
         }
 
         async function clearLocalServerRoom(pin) {
@@ -3495,6 +3516,7 @@ Emily
                             </div>
                             <div class="font-display text-base font-bold text-white truncate mt-0.5">${escapeHtml(p.playerName)}</div>
                             <div class="text-[11px] text-amber-300 font-semibold truncate">"${escapeHtml(p.battleCry || arch.battleCry)}"</div>
+                            ${p.notes ? `<div class="text-[11px] text-cyan-300 font-medium truncate mt-0.5" title="${escapeHtml(p.notes)}">📝 ${escapeHtml(p.notes)}</div>` : ''}
                         </div>
                     </div>
                 `;
@@ -3615,6 +3637,7 @@ Emily
             const pinVal = (document.getElementById('mobilePinInput').value || stageRoomPin || 'DUCK').trim().toUpperCase();
             const nameVal = (document.getElementById('mobilePlayerNameInput').value || '').trim();
             const cryVal = (document.getElementById('mobileBattleCryInput').value || 'FULL SEND!').trim();
+            const notesVal = (document.getElementById('mobileNotesInput')?.value || '').trim();
             const arch = DUCK_ARCHETYPES.find(d => d.id === selectedMobileDuckId) || DUCK_ARCHETYPES[0];
 
             const finalName = nameVal || `${arch.defaultName}`;
@@ -3625,14 +3648,22 @@ Emily
                 playerName: finalName,
                 duckId: arch.id,
                 battleCry: cryVal,
+                notes: notesVal,
                 joinedAt: Date.now(),
                 lastBoostAt: 0
             };
 
-            // Update local, P2P WebRTC online relay, server & cloud
+            // Check server-side anti-cheat (1 join per device/IP per room)
+            const serverRes = await publishToLocalServer(currentMobileParticipant);
+            if (serverRes && serverRes.ok === false) {
+                alert(`⚠️ ${serverRes.message || 'This device has already joined this room.'}`);
+                if (typeof playQuack === 'function') playQuack(350, true, 'sad');
+                return;
+            }
+
+            // Update local, P2P WebRTC online relay & cloud
             handleIncomingStageParticipant(currentMobileParticipant);
             sendViaMobileP2PRelay(currentMobileParticipant);
-            publishToLocalServer(currentMobileParticipant);
             if (window.cloudPublishParticipant) {
                 await window.cloudPublishParticipant(currentMobileParticipant);
             }
