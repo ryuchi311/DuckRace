@@ -19,6 +19,17 @@ const mimeTypes = {
   '.wav': 'audio/wav'
 };
 
+// In-memory heartbeat tracker for current live viewers
+const liveViewers = new Map(); // visitorId -> timestamp
+
+function pruneInactiveViewers() {
+  const cutoff = Date.now() - 35 * 1000; // active within last 35 seconds
+  for (const [id, ts] of liveViewers.entries()) {
+    if (ts < cutoff) liveViewers.delete(id);
+  }
+}
+setInterval(pruneInactiveViewers, 15 * 1000);
+
 // ============================================================================
 // 1. JSON DATABASE ENGINE (Persistent & Crash-Resilient)
 // ============================================================================
@@ -171,9 +182,16 @@ const server = http.createServer(async (req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const reqPath = parsedUrl.pathname;
 
-  // 1. Real-Time Stage Room State Endpoint
+  // 1. Real-Time Stage Room State & Live Viewer Heartbeat Endpoint
   if (reqPath === '/api/stage-state' && req.method === 'GET') {
     const pin = (parsedUrl.searchParams.get('pin') || 'DUCK').toUpperCase();
+    const visitorId = parsedUrl.searchParams.get('visitorId') || '';
+    if (visitorId) {
+      liveViewers.set(visitorId, Date.now());
+    }
+    pruneInactiveViewers();
+    const currentLiveViewers = Math.max(1, liveViewers.size);
+
     const list = db.rooms[pin] || [];
     const origin = resolvePublicOrigin(req);
     sendJson(res, 200, {
@@ -182,6 +200,7 @@ const server = http.createServer(async (req, res) => {
       serverTime: Date.now(),
       lanOrigin: origin,
       publicOrigin: origin,
+      liveViewers: currentLiveViewers,
       participants: list
     });
     return;

@@ -268,6 +268,14 @@
             <!-- Right: Clean Organized Action Cluster -->
             <div class="flex items-center gap-2 sm:gap-2.5">
                 
+                <!-- 0. Live Online Visitors / Viewers Counter Pill -->
+                <div id="liveViewersPill" class="ios-dynamic-island px-2.5 sm:px-3 py-1 flex items-center gap-1.5 text-xs shrink-0" title="Active visitors currently viewing this page">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                    <span class="text-slate-400 font-medium hidden xs:inline">Live:</span>
+                    <span id="liveViewersCountBadge" class="font-mono font-black text-cyan-300 text-xs">1</span>
+                    <span class="text-[10px] text-slate-400 hidden md:inline">online</span>
+                </div>
+
                 <!-- 1. Live Racers Counter Pill -->
                 <div class="ios-dynamic-island px-3 py-1 flex items-center gap-2 text-xs shrink-0">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -584,6 +592,14 @@ Emily
                             <span id="hudTimer" class="font-mono text-sm sm:text-base font-black text-amber-300 leading-tight">00.0s</span>
                         </div>
 
+                        <!-- Live Spectators Mini Badge -->
+                        <div class="ios-dynamic-island px-2.5 py-1.5 flex flex-col items-center justify-center shrink-0" title="Current live spectators viewing this race">
+                            <span class="text-[8px] uppercase tracking-wider text-cyan-400 font-extrabold leading-none flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span> VIEWERS
+                            </span>
+                            <span id="hudLiveViewersCount" class="font-mono text-xs sm:text-sm font-black text-white leading-tight">1</span>
+                        </div>
+
                         <!-- Track Map Selector & Live Progress -->
                         <div class="flex-1 min-w-[130px]">
                             <div class="flex items-center justify-between text-xs font-bold mb-1 gap-2">
@@ -802,6 +818,13 @@ Emily
                                 <div class="font-display text-sm sm:text-base font-black text-emerald-400">
                                     <span id="irlTrackJoinedCount">0</span> <span class="text-xs font-bold text-slate-300">Participants</span>
                                 </div>
+                            </div>
+                            <div class="bg-slate-950/80 border border-slate-800/80 rounded-xl px-2.5 py-0.5 flex items-center justify-between text-[10px]">
+                                <span class="text-slate-400 font-medium">Spectators:</span>
+                                <span class="font-mono font-bold text-cyan-300 flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+                                    <span id="irlTrackLiveViewersCount">1</span> viewing
+                                </span>
                             </div>
                             <div id="irlTrackUrlHint" class="text-[10px] font-mono text-cyan-300 truncate" title="Scan QR with phone camera">
                                 Scan QR with Phone!
@@ -3179,12 +3202,41 @@ Emily
             };
         }
 
-        // Poll Local Node Server (/api/stage-state) every 1.2s so phones on Wi-Fi/LAN sync seamlessly in real time!
+        // Persistent client visitor identifier for accurate live viewer count
+        const CLIENT_VISITOR_ID = (function() {
+            try {
+                let id = sessionStorage.getItem('duck_race_client_visitor_id');
+                if (!id) {
+                    id = 'vis_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+                    sessionStorage.setItem('duck_race_client_visitor_id', id);
+                }
+                return id;
+            } catch (e) {
+                return 'vis_' + Date.now().toString(36);
+            }
+        })();
+
+        // Update UI counters for current live viewers
+        function updateLiveViewersUI(count) {
+            const safeCount = Math.max(1, parseInt(count, 10) || 1);
+            const headerBadge = document.getElementById('liveViewersCountBadge');
+            const hudBadge = document.getElementById('hudLiveViewersCount');
+            const irlBadge = document.getElementById('irlTrackLiveViewersCount');
+            if (headerBadge) headerBadge.textContent = safeCount;
+            if (hudBadge) hudBadge.textContent = safeCount;
+            if (irlBadge) irlBadge.textContent = safeCount;
+        }
+
+        // Poll Local Node Server / Cloudflare Worker (/api/stage-state) every 1.5s with visitor heartbeat
         async function pollLocalServerStageState() {
             try {
-                const res = await fetch(`/api/stage-state?pin=${encodeURIComponent(stageRoomPin)}`, { cache: 'no-store' });
+                const query = `pin=${encodeURIComponent(stageRoomPin)}&visitorId=${encodeURIComponent(CLIENT_VISITOR_ID)}`;
+                const res = await fetch(`/api/stage-state?${query}`, { cache: 'no-store' });
                 if (!res.ok) return;
                 const data = await res.json();
+                if (data.liveViewers !== undefined) {
+                    updateLiveViewersUI(data.liveViewers);
+                }
                 if (data.lanOrigin && data.lanOrigin !== detectedLanOrigin) {
                     detectedLanOrigin = data.lanOrigin;
                     updateStageQrDisplay();
@@ -3202,7 +3254,7 @@ Emily
                 // Offline or file:// protocol — gracefully ignore
             }
         }
-        setInterval(pollLocalServerStageState, 1200);
+        setInterval(pollLocalServerStageState, 1500);
         setTimeout(pollLocalServerStageState, 200);
 
         async function publishToLocalServer(participant) {

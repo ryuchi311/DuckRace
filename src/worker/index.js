@@ -46,8 +46,13 @@ export default {
             last_boost_at INTEGER,
             PRIMARY KEY (room_pin, participant_id)
           )`),
+          env.DB.prepare(`CREATE TABLE IF NOT EXISTS viewers (
+            visitor_id TEXT PRIMARY KEY,
+            last_seen INTEGER
+          )`),
           env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_participants_room ON participants(room_pin)`),
-          env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_participants_joined ON participants(joined_at)`)
+          env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_participants_joined ON participants(joined_at)`),
+          env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_viewers_seen ON viewers(last_seen)`)
         ]);
         await cleanupOldData();
       } catch (e) {}
@@ -58,14 +63,35 @@ export default {
     // -----------------------------------------------------------
     if (pathname === '/api/stage-state' && request.method === 'GET') {
       const pin = (url.searchParams.get('pin') || 'DUCK').trim().toUpperCase();
+      const visitorId = (url.searchParams.get('visitorId') || '').trim();
       let participants = [];
       let dbType = 'In-Memory / None';
+      let liveViewers = 1;
 
       // 1A. Try Cloudflare D1 (SQL)
       if (env && env.DB) {
         dbType = 'Cloudflare D1 (SQL)';
         try {
           await initD1();
+          const now = Date.now();
+          const cutoff = now - 35 * 1000; // active within last 35 seconds
+
+          if (visitorId) {
+            await env.DB.prepare(`
+              INSERT INTO viewers (visitor_id, last_seen) VALUES (?, ?)
+              ON CONFLICT(visitor_id) DO UPDATE SET last_seen = excluded.last_seen
+            `).bind(visitorId, now).run();
+          }
+
+          // Clean up expired viewers older than 2 minutes to keep table tiny
+          await env.DB.prepare(`DELETE FROM viewers WHERE last_seen < ?`).bind(now - 120 * 1000).run();
+
+          // Count active viewers
+          const countRes = await env.DB.prepare(`SELECT COUNT(*) as count FROM viewers WHERE last_seen >= ?`).bind(cutoff).first();
+          if (countRes && countRes.count) {
+            liveViewers = Math.max(1, countRes.count);
+          }
+
           const { results } = await env.DB.prepare(
             `SELECT participant_id as participantId, room_pin as roomPin, player_name as playerName,
                     duck_id as duckId, battle_cry as battleCry, joined_at as joinedAt, last_boost_at as lastBoostAt
@@ -82,6 +108,7 @@ export default {
         try {
           const raw = await env.DUCK_ROOMS_KV.get(`room:${pin}`);
           if (raw) participants = JSON.parse(raw);
+          liveViewers = 1;
         } catch (e) {}
       }
 
@@ -94,6 +121,7 @@ export default {
         serverTime: Date.now(),
         lanOrigin: publicOrigin,
         publicOrigin: publicOrigin,
+        liveViewers,
         participants
       }), { headers: corsHeaders });
     }
