@@ -3896,7 +3896,23 @@ Emily
 
         function openMobileJoinModal(prefillPin) {
             const pinInput = document.getElementById('mobilePinInput');
-            if (pinInput) pinInput.value = (prefillPin || stageRoomPin || 'DUCK').toUpperCase();
+            const targetPin = (prefillPin || stageRoomPin || 'DUCK').toUpperCase();
+            if (pinInput) pinInput.value = targetPin;
+
+            // Multi-tab protection: restore existing pass if already joined in another tab
+            if (!currentMobileParticipant) {
+                try {
+                    const saved = localStorage.getItem('duckRaceJoined_' + targetPin);
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        if (parsed && parsed.participantId) {
+                            currentMobileParticipant = parsed;
+                            selectedMobileDuckId = parsed.duckId || selectedMobileDuckId;
+                        }
+                    }
+                } catch (e) {}
+            }
+
             if (!currentMobileParticipant && Array.isArray(DUCK_ARCHETYPES) && DUCK_ARCHETYPES.length > 0) {
                 const randArch = DUCK_ARCHETYPES[Math.floor(Math.random() * DUCK_ARCHETYPES.length)];
                 selectedMobileDuckId = randArch.id;
@@ -3905,6 +3921,10 @@ Emily
             }
             renderMobileDuckPicker();
             document.getElementById('mobileControllerModal').classList.remove('hidden');
+
+            if (currentMobileParticipant && typeof showMobileControllerView === 'function') {
+                showMobileControllerView(currentMobileParticipant);
+            }
         }
 
         function closeMobileJoinModal() {
@@ -3926,6 +3946,22 @@ Emily
             if (ageWarning) ageWarning.classList.add('hidden');
 
             const pinVal = (document.getElementById('mobilePinInput').value || stageRoomPin || 'DUCK').trim().toUpperCase();
+
+            // Multi-tab protection: prevent joining the same room twice from different tabs
+            try {
+                const existingRaw = localStorage.getItem('duckRaceJoined_' + pinVal);
+                if (existingRaw) {
+                    const existing = JSON.parse(existingRaw);
+                    if (existing && existing.participantId && existing.participantId !== currentMobileParticipant?.participantId) {
+                        currentMobileParticipant = existing;
+                        if (typeof showMobileControllerView === 'function') showMobileControllerView(existing);
+                        alert(`⚠️ You have already joined room #${pinVal} from this browser!`);
+                        if (typeof playQuack === 'function') playQuack(350, true, 'sad');
+                        return;
+                    }
+                }
+            } catch (e) {}
+
             const nameVal = (document.getElementById('mobilePlayerNameInput').value || '').trim();
             const cryVal = (document.getElementById('mobileBattleCryInput').value || 'FULL SEND!').trim();
             const notesInputEl = document.getElementById('mobileNotesInput');
@@ -3968,6 +4004,10 @@ Emily
                 if (typeof playQuack === 'function') playQuack(350, true, 'sad');
                 return;
             }
+
+            try {
+                localStorage.setItem('duckRaceJoined_' + pinVal, JSON.stringify(currentMobileParticipant));
+            } catch (e) {}
 
             // Update local, P2P WebRTC online relay & cloud
             handleIncomingStageParticipant(currentMobileParticipant);
