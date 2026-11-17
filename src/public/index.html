@@ -837,14 +837,11 @@ Emily
 
                     <!-- Live Joined Participant Pills Preview -->
                     <div id="irlTrackRecentList" class="max-h-20 sm:max-h-24 overflow-y-auto flex flex-wrap gap-1.5 p-1 bg-slate-900/60 rounded-xl border border-slate-800/80">
-                        <span class="text-[11px] text-slate-400 italic px-2 py-1">No racers on the starting line yet — scan the QR code or click "+1 Test" below!</span>
+                        <span class="text-[11px] text-slate-400 italic px-2 py-1">No racers on the starting line yet — scan the QR code to join!</span>
                     </div>
 
-                    <!-- Testing & Clear Controls -->
-                    <div class="grid grid-cols-3 gap-1.5">
-                        <button onclick="simulateStageParticipantJoin()" class="btn-game bg-emerald-600/25 hover:bg-emerald-600/40 border border-emerald-500/40 text-emerald-300 py-1.5 px-2 rounded-xl text-[11px] font-extrabold flex items-center justify-center gap-1">
-                            <span>🤖</span> +1 Test
-                        </button>
+                    <!-- Controls -->
+                    <div class="grid grid-cols-2 gap-1.5">
                         <button onclick="openMobileJoinModal(stageRoomPin)" class="btn-game bg-cyan-600/25 hover:bg-cyan-600/40 border border-cyan-500/40 text-cyan-300 py-1.5 px-2 rounded-xl text-[11px] font-extrabold flex items-center justify-center gap-1">
                             <span>📱</span> Phone UI
                         </button>
@@ -1464,9 +1461,6 @@ Emily
                     <div class="w-full pt-2.5 sm:pt-3 border-t border-slate-800 flex flex-wrap items-center justify-center gap-2">
                         <button onclick="openMobileJoinModal(stageRoomPin)" class="btn-game flex-1 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold px-3 py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5">
                             <span>📱</span> Phone Controller View
-                        </button>
-                        <button onclick="simulateStageParticipantJoin()" class="btn-game bg-purple-600 hover:bg-purple-500 text-white font-bold px-3 py-2.5 rounded-xl text-xs flex items-center justify-center gap-1" title="Simulate a participant scanning & joining">
-                            <span>🤖+1</span> Simulate Join
                         </button>
                     </div>
                 </div>
@@ -3735,7 +3729,7 @@ Emily
             }
             if (recentList) {
                 if (stageParticipants.length === 0) {
-                    recentList.innerHTML = `<span class="text-[11px] text-slate-400 italic px-2 py-1">No racers on the starting line yet — scan the QR code or click "+1 Test" below!</span>`;
+                    recentList.innerHTML = `<span class="text-[11px] text-slate-400 italic px-2 py-1">No racers on the starting line yet — scan the QR code to join!</span>`;
                 } else {
                     recentList.innerHTML = stageParticipants.map((p, idx) => {
                         const arch = DUCK_ARCHETYPES.find(d => d.id === p.duckId) || DUCK_ARCHETYPES[0];
