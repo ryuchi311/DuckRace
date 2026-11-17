@@ -15,5 +15,12 @@ CREATE TABLE IF NOT EXISTS participants (
   PRIMARY KEY (room_pin, participant_id)
 );
 
+CREATE TABLE IF NOT EXISTS viewers (
+  visitor_id TEXT PRIMARY KEY,
+  last_seen INTEGER
+);
+
 CREATE INDEX IF NOT EXISTS idx_participants_room ON participants(room_pin);
+CREATE INDEX IF NOT EXISTS idx_participants_joined ON participants(joined_at);
+CREATE INDEX IF NOT EXISTS idx_viewers_seen ON viewers(last_seen);
 
